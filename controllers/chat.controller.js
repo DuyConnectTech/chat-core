@@ -73,6 +73,24 @@ class ChatController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * API lấy gợi ý từ AI cho cuộc hội thoại
+   */
+  async getAiSuggestion(req, res) {
+    try {
+      const { conversationId } = req.params;
+      const messages = await chatService.getMessages(conversationId, 10); // Lấy 10 tin nhắn gần nhất
+      
+      // Build context string
+      const context = messages.map(m => `${m.sender.display_name}: ${m.content}`).join('\n');
+      
+      const suggestion = await import('../services/gemini.service.js').then(m => m.default.getSuggestedReply(context));
+      res.json({ suggestion });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 export default new ChatController();

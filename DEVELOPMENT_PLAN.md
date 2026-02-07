@@ -65,14 +65,14 @@ Schema được thiết kế theo hướng **Universal User** (Giống Messenger
 - [x] **Task 4.3:** Giao diện quản lý thông tin nhóm.
 
 ### Giai đoạn 5: Tích hợp Gemini AI
-- [ ] **Task 5.1:** Viết `gemini.service.js` kết nối Google Generative AI SDK.
-- [ ] **Task 5.2:** Tính năng "Gợi ý trả lời" (Admin bấm nút để AI tạo nháp).
+- [x] **Task 5.1:** Viết `gemini.service.js` kết nối Google Generative AI SDK.
+- [x] **Task 5.2:** Tính năng "Gợi ý trả lời" (Admin bấm nút để AI tạo nháp).
 - [ ] **Task 5.3:** Cấu hình tham số AI qua Dashboard/Setting.
 
 ### Giai đoạn 6: Quản trị & Hoàn thiện
 - [ ] **Task 6.1:** Trang Dashboard Admin (Quản lý User, Rooms).
-- [ ] **Task 6.2:** Tối ưu hóa Build Script (ESBuild + Sass).
-- [ ] **Task 6.3:** Viết README.md hướng dẫn chi tiết cho Intern.
+- [/] **Task 6.2:** Tối ưu hóa Build Script (ESBuild + Sass).
+- [/] **Task 6.3:** Viết README.md hướng dẫn chi tiết cho Intern.
 
 ---
 
@@ -84,8 +84,8 @@ Schema được thiết kế theo hướng **Universal User** (Giống Messenger
 | **Giai đoạn 2** | ✅ Hoàn thành | 07/02/2026 | Models & Auth xong. |
 | **Giai đoạn 3** | ✅ Hoàn thành | 07/02/2026 | Lõi Chat Real-time xong. |
 | **Giai đoạn 4** | ✅ Hoàn thành | 07/02/2026 | Phát triển Group Chat xong. |
-| **Giai đoạn 5** | 🔄 Đang chạy | - | Tích hợp Gemini AI. |
-| **Giai đoạn 6** | ⏳ Chờ | - | - |
+| **Giai đoạn 5** | ✅ Hoàn thành | 07/02/2026 | Tích hợp Gemini AI xong. |
+| **Giai đoạn 6** | 🔄 Đang chạy | - | Hoàn thiện tài liệu & Build. |
 
 ---
 *Ghi chú: Luôn cập nhật trạng thái vào bảng này sau mỗi Task hoàn thành.*

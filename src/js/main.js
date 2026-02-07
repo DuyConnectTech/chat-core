@@ -20,6 +20,7 @@ const activeChatTitle = document.getElementById('active-chat-title');
 const activeChatAvatar = document.getElementById('active-chat-avatar');
 const chatForm = document.getElementById('chat-form');
 const msgInput = document.getElementById('msg-input');
+const aiSuggestBtn = document.getElementById('ai-suggest-btn');
 
 /**
  * Hiển thị tin nhắn lên màn hình
@@ -31,13 +32,13 @@ function appendMessage(msg) {
     let msgHtml = '';
     
     if (isSystem) {
-        msgHtml = `<div class="msg-system"><strong>${msg.sender.display_name}</strong> ${msg.content}</div>`;
+        msgHtml = `<div class="msg-system text-center my-2 small text-muted"><em><strong>${msg.sender?.display_name || 'Hệ thống'}</strong> ${msg.content}</em></div>`;
     } else {
         msgHtml = `
             <div class="msg-bubble ${isMe ? 'msg-right' : 'msg-left'}">
-                ${!isMe ? `<div class="msg-info"><strong>${msg.sender.display_name}</strong></div>` : ''}
+                ${!isMe ? `<div class="msg-info"><strong>${msg.sender?.display_name || 'Người dùng'}</strong></div>` : ''}
                 <div>${msg.content}</div>
-                <div class="msg-info text-end">${new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                <div class="msg-info text-end small opacity-75">${new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
             </div>
         `;
     }
@@ -115,13 +116,47 @@ if (chatForm) {
 }
 
 /**
+ * Xử lý Gợi ý AI
+ */
+if (aiSuggestBtn) {
+    aiSuggestBtn.addEventListener('click', async () => {
+        if (!activeConversationId) return alert('Vui lòng chọn một cuộc hội thoại');
+
+        aiSuggestBtn.disabled = true;
+        aiSuggestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const response = await fetch(`/api/conversations/${activeConversationId}/suggest`);
+            const data = await response.json();
+            
+            if (data.suggestion) {
+                msgInput.value = data.suggestion;
+                msgInput.focus();
+            } else {
+                alert('AI không thể đưa ra gợi ý lúc này.');
+            }
+        } catch (error) {
+            console.error('Lỗi lấy gợi ý AI:', error);
+            alert('Có lỗi xảy ra khi gọi AI.');
+        } finally {
+            aiSuggestBtn.disabled = false;
+            aiSuggestBtn.innerHTML = '<i class="fas fa-robot"></i>';
+        }
+    });
+}
+
+/**
  * Socket Listeners
  */
 socket.on('message:new', (msg) => {
-    // Chỉ hiển thị nếu tin nhắn thuộc về cuộc hội thoại đang mở
     if (msg.conversation_id === activeConversationId) {
         appendMessage(msg);
     }
+});
+
+socket.on('user:status', (data) => {
+    console.log('Trạng thái user thay đổi:', data);
+    // Có thể cập nhật UI dấu chấm xanh ở đây
 });
 
 socket.on('error', (err) => {

@@ -20,6 +20,7 @@ router.get('/chat', chatController.renderChatPage);
 router.get('/api/conversations/:conversationId/messages', chatController.getMessages);
 router.post('/api/conversations/private', chatController.startPrivateChat);
 router.post('/api/conversations/group', chatController.createGroup);
+router.get('/api/conversations/:conversationId/suggest', chatController.getAiSuggestion);
 
 // Home route
 router.get('/', (req, res) => {
