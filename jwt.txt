@@ -1,0 +1,18 @@
+#HS256
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+
+#RS256
+openssl genrsa -out private.pem 2048
+openssl rsa -in private.pem -pubout -out public.pem
+
+#WebPush
+npx web-push generate-vapid-keys
+
+{
+  "sub": "019a4c84-8e33-752e-a583-71dece87fa50",
+  "role": "admin",
+  "iat": 1762228141,
+  "exp": 1762227573,
+  "aud": "chat:admin",
+  "iss": "chatapp-service-jwt"
+}
