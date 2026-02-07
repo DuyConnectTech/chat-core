@@ -1,6 +1,6 @@
-@import "variables";
-@import "auth";
-@import "chat";
+@use "variables" as *;
+@use "auth";
+@use "chat";
 
 // Global styles
 body {
