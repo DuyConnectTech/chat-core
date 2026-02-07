@@ -27,15 +27,24 @@ class ChatService {
   }
 
   /**
-   * Lấy lịch sử tin nhắn của một cuộc hội thoại
+   * Lấy lịch sử tin nhắn của một cuộc hội thoại (Hỗ trợ Lazy Loading)
    */
-  async getMessages(conversationId, limit = 50) {
+  async getMessages(conversationId, limit = 20, beforeId = null) {
+    const where = { conversation_id: conversationId };
+    
+    if (beforeId) {
+      const anchor = await Message.findByPk(beforeId);
+      if (anchor) {
+        where.created_at = { [Op.lt]: anchor.created_at };
+      }
+    }
+
     return await Message.findAll({
-      where: { conversation_id: conversationId },
+      where,
       include: [{ model: User, as: 'sender', attributes: ['id', 'display_name', 'avatar_url'] }],
-      order: [['created_at', 'ASC']],
-      limit: limit
-    });
+      order: [['created_at', 'DESC']], // Lấy tin nhắn mới nhất trước
+      limit: parseInt(limit)
+    }).then(messages => messages.reverse()); // Sau đó đảo ngược lại để hiển thị đúng thứ tự thời gian
   }
 
   /**
@@ -142,6 +151,101 @@ class ChatService {
       await t.rollback();
       throw error;
     }
+  }
+
+  /**
+   * Thu hồi tin nhắn (Chỉ người gửi mới được thu hồi)
+   */
+  async recallMessage(messageId, userId) {
+    const message = await Message.findByPk(messageId);
+    if (!message) throw new Error('Tin nhắn không tồn tại');
+    if (message.sender_id !== userId) throw new Error('Bạn không có quyền thu hồi tin nhắn này');
+
+    // Kiểm tra thời gian (Ví dụ: cho phép thu hồi trong vòng 10 phút)
+    const diff = (new Date() - new Date(message.created_at)) / 1000 / 60;
+    if (diff > 10) throw new Error('Đã quá thời gian cho phép thu hồi (10 phút)');
+
+    await message.update({ is_recalled: true });
+    return message;
+  }
+
+  /**
+   * Xóa tin nhắn phía mình
+   */
+  async deleteMessageForMe(messageId, userId) {
+    const message = await Message.findByPk(messageId);
+    if (!message) throw new Error('Tin nhắn không tồn tại');
+
+    let deletedFor = message.deleted_for || [];
+    if (!deletedFor.includes(userId)) {
+      deletedFor.push(userId);
+      await message.update({ deleted_for: deletedFor });
+    }
+    return true;
+  }
+
+  /**
+   * Rời khỏi nhóm
+   */
+  async leaveGroup(conversationId, userId) {
+    const member = await ConversationMember.findOne({
+      where: { conversation_id: conversationId, user_id: userId }
+    });
+
+    if (!member) throw new Error('Bạn không phải thành viên của nhóm này');
+
+    const conversation = await Conversation.findByPk(conversationId);
+    
+    const t = await sequelize.transaction();
+    try {
+      // 1. Xóa thành viên
+      await member.destroy({ transaction: t });
+
+      // 2. Nếu là Owner rời nhóm, chuyển quyền cho thành viên lâu nhất
+      if (conversation.owner_id === userId) {
+        const nextOwner = await ConversationMember.findOne({
+          where: { conversation_id: conversationId },
+          order: [['joined_at', 'ASC']],
+          transaction: t
+        });
+
+        if (nextOwner) {
+          await conversation.update({ owner_id: nextOwner.user_id }, { transaction: t });
+          await nextOwner.update({ role: 'admin' }, { transaction: t });
+        } else {
+          // Không còn ai trong nhóm -> Xóa nhóm
+          await conversation.destroy({ transaction: t });
+        }
+      }
+
+      // 3. Tạo tin nhắn hệ thống
+      const user = await User.findByPk(userId);
+      await Message.create({
+        conversation_id: conversationId,
+        sender_id: userId,
+        content: `đã rời khỏi nhóm`,
+        type: 'system'
+      }, { transaction: t });
+
+      await t.commit();
+      return true;
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+  }
+
+  /**
+   * Xóa toàn bộ nhóm (Chỉ Owner)
+   */
+  async deleteGroup(conversationId, userId) {
+    const conversation = await Conversation.findByPk(conversationId);
+    if (!conversation) throw new Error('Cuộc hội thoại không tồn tại');
+    if (conversation.type !== 'group') throw new Error('Đây không phải là nhóm');
+    if (conversation.owner_id !== userId) throw new Error('Chỉ chủ nhóm mới có quyền giải tán nhóm');
+
+    await conversation.destroy(); // ON DELETE CASCADE sẽ tự xóa members và messages
+    return true;
   }
 }
 

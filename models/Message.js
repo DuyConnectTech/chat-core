@@ -20,8 +20,20 @@ const Message = sequelize.define('Message', {
     allowNull: false
   },
   type: {
-    type: DataTypes.ENUM('text', 'image', 'system', 'ai'),
+    type: DataTypes.ENUM('text', 'image', 'audio', 'system', 'ai'),
     defaultValue: 'text'
+  },
+  is_recalled: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  metadata: {
+    type: DataTypes.JSON,
+    allowNull: true // Chứa url ảnh, duration audio, size...
+  },
+  deleted_for: {
+    type: DataTypes.JSON,
+    defaultValue: [] // Lưu mảng user IDs đã xóa tin này phía họ
   }
 }, {
   tableName: 'messages'

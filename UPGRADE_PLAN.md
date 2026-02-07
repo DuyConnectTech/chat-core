@@ -51,34 +51,34 @@ Tài liệu này phác thảo lộ trình nâng cấp toàn diện cho dự án 
 ## 4. LỘ TRÌNH PHÁT TRIỂN (PHASES)
 
 ### Giai đoạn 1: Nâng cấp Cơ sở dữ liệu & Helper (Foundation)
-- [ ] Cập nhật Models (`Message`, `Conversation`).
-- [ ] Chạy Migration (`sequelize.sync({ alter: true })`).
-- [ ] Cấu hình `Multer` trong `utils/upload.js` để xử lý upload file.
+- [x] Cập nhật Models (`Message`, `Conversation`).
+- [x] Chạy Migration (`sequelize.sync({ alter: true })`).
+- [x] Cấu hình `Multer` trong `utils/upload.js` để xử lý upload file.
 
 ### Giai đoạn 2: Tính năng Đa phương tiện (Multimedia)
-- [ ] **Backend:** API Upload ảnh/audio.
-- [ ] **Frontend:**
-    - UI nút kẹp ghim (Attachment).
-    - Preview ảnh trước khi gửi.
-    - Tích hợp `MediaRecorder API` để ghi âm trực tiếp trên trình duyệt.
-    - Audio Player custom (hoặc dùng thẻ `<audio>` cơ bản).
+- [x] **Backend:** API Upload ảnh/audio.
+- [x] **Frontend:**
+    - [x] UI nút kẹp ghim (Attachment).
+    - [x] Preview ảnh trước khi gửi.
+    - [x] Tích hợp `MediaRecorder API` để ghi âm trực tiếp trên trình duyệt.
+    - [x] Audio Player custom.
 
 ### Giai đoạn 3: Quản lý Tin nhắn & Nhóm
-- [ ] **Thu hồi tin nhắn:** Chỉ người gửi mới được thu hồi (trong vòng X phút).
-- [ ] **Xóa tin nhắn phía mình:** Chỉ ẩn tin nhắn đó khỏi view của user hiện tại.
-- [ ] **Rời nhóm:** Logic xóa `ConversationMember`. Nếu Admin rời, chuyển quyền cho người khác.
-- [ ] **Xóa nhóm:** Xóa toàn bộ dữ liệu liên quan (Soft delete).
+- [x] **Thu hồi tin nhắn:** Chỉ người gửi mới được thu hồi (trong vòng X phút).
+- [x] **Xóa tin nhắn phía mình:** Chỉ ẩn tin nhắn đó khỏi view của user hiện tại.
+- [x] **Rời nhóm:** Logic xóa `ConversationMember`. Nếu Admin rời, chuyển quyền cho người khác.
+- [x] **Xóa nhóm:** Xóa toàn bộ dữ liệu liên quan (Soft delete).
 
 ### Giai đoạn 4: AI Chatbot (The Bot Member)
-- [ ] Tạo một User đặc biệt trong DB (Role: `bot`).
-- [ ] Khi `is_bot_active = true`:
-    - Bot tự động lắng nghe tin nhắn mới trong phòng.
-    - Gửi ngữ cảnh cho Gemini.
-    - Socket emit `bot:typing`.
-    - Gửi phản hồi vào chat như một user bình thường.
+- [x] Tạo một User đặc biệt trong DB (Role: `bot`).
+- [x] Khi `is_bot_active = true`:
+    - [x] Bot tự động lắng nghe tin nhắn mới trong phòng.
+    - [x] Gửi ngữ cảnh cho Gemini.
+    - [x] Socket emit `bot:typing`.
+    - [x] Gửi phản hồi vào chat như một user bình thường.
 
 ### Giai đoạn 5: Tối ưu hóa & Hiệu năng
-- [ ] **Lazy Loading:** Chỉ tải 20 tin nhắn đầu, cuộn lên tải tiếp.
+- [x] **Lazy Loading:** Chỉ tải 20 tin nhắn đầu, cuộn lên tải tiếp.
 - [ ] **Image Optimization:** Dùng thư viện `sharp` để resize ảnh trước khi lưu.
 - [ ] **Redis Adapter:** Cấu hình Socket.io dùng Redis (chuẩn bị cho Scale nhiều server).
 
@@ -94,4 +94,4 @@ Tài liệu này phác thảo lộ trình nâng cấp toàn diện cho dự án 
 - **Feedback:** Hiệu ứng loading mượt mà khi gửi ảnh/audio.
 
 ---
-*Kế hoạch này được thiết kế để thực hiện cuốn chiếu (Rolling wave), xong phase nào chắc phase đó.*
+**DỰ ÁN ĐÃ HOÀN THÀNH 90% LỘ TRÌNH NÂNG CẤP! 🏁**

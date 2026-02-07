@@ -61,6 +61,7 @@ typings/
 # next.js build output
 .next
 
-/public/javascripts/
-/public/stylesheets/
+/public/js/
+/public/css/
+/public/uploads/
 /dist/

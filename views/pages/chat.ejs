@@ -41,7 +41,11 @@
                 </div>
                 <div class="flex-grow-1 overflow-auto" id="conversation-list">
                     <% conversations.forEach(conv => { %>
-                        <div class="conv-item d-flex align-items-center p-3" data-id="<%= conv.id %>">
+                        <div class="conv-item d-flex align-items-center p-3" 
+                             data-id="<%= conv.id %>" 
+                             data-type="<%= conv.type %>"
+                             data-owner="<%= conv.owner_id %>"
+                             data-bot="<%= conv.is_bot_active %>">
                             <div class="position-relative me-3">
                                 <div class="user-badge"><%= conv.type === 'private' ? (conv.Users[0]?.display_name[0] || 'U') : 'G' %></div>
                             </div>
@@ -67,13 +71,24 @@
                 </div>
 
                 <div id="chat-window" class="d-none h-100 flex-column">
-                    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
+                    <!-- New Header Design -->
+                    <div class="chat-content-header shadow-sm">
                         <div class="d-flex align-items-center">
-                            <div class="user-badge me-3" id="active-chat-avatar"></div>
-                            <h6 class="mb-0" id="active-chat-title"></h6>
+                            <div class="user-badge me-3 shadow-sm" id="active-chat-avatar"></div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" id="active-chat-title"></h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">Đang hoạt động</small>
+                            </div>
                         </div>
-                        <div class="text-primary cursor-pointer">
-                            <i class="fas fa-info-circle fa-lg"></i>
+                        <div class="dropdown">
+                            <button class="btn btn-light rounded-circle" data-bs-toggle="dropdown" style="width: 40px; height: 40px;">
+                                <i class="fas fa-ellipsis-v text-muted"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                                <li><button class="dropdown-item text-danger py-2" id="leave-group-btn" style="display:none;"><i class="fas fa-sign-out-alt me-2 w-20"></i>Rời nhóm</button></li>
+                                <li><button class="dropdown-item text-danger py-2" id="delete-group-btn" style="display:none;"><i class="fas fa-trash-alt me-2 w-20"></i>Giải tán nhóm</button></li>
+                                <li><button class="dropdown-item py-2" id="bot-toggle-btn" style="display:none;"><i class="fas fa-robot me-2 w-20"></i>Cài đặt AI</button></li>
+                            </ul>
                         </div>
                     </div>
 
@@ -82,12 +97,24 @@
                     </div>
                     
                     <div class="message-input">
-                        <form id="chat-form" class="input-group">
-                            <button type="button" id="ai-suggest-btn" class="btn btn-outline-secondary" title="AI Gợi ý">
-                                <i class="fas fa-robot"></i>
+                        <div id="recording-status" class="text-danger small mb-2 d-none ps-2">
+                            <i class="fas fa-circle fa-pulse me-2"></i> Đang ghi âm... <span id="recording-time" class="fw-bold">00:00</span>
+                        </div>
+                        <form id="chat-form">
+                            <button type="button" id="upload-btn" title="Gửi ảnh">
+                                <i class="fas fa-image"></i>
                             </button>
-                            <input type="text" id="msg-input" class="form-control" placeholder="Nhập tin nhắn..." autocomplete="off">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i></button>
+                            <button type="button" id="record-btn" title="Ghi âm">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button type="button" id="ai-suggest-btn" title="AI Gợi ý">
+                                <i class="fas fa-magic"></i>
+                            </button>
+                            <input type="file" id="file-input" class="d-none" accept="image/*">
+                            <input type="text" id="msg-input" class="flex-grow-1 mx-2" placeholder="Nhập tin nhắn..." autocomplete="off">
+                            <button type="submit" class="text-primary" title="Gửi">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
                         </form>
                     </div>
                 </div>

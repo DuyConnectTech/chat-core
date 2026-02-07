@@ -22,6 +22,14 @@ const Conversation = sequelize.define('Conversation', {
   last_message_id: {
     type: DataTypes.UUID,
     allowNull: true
+  },
+  is_bot_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  owner_id: {
+    type: DataTypes.UUID,
+    allowNull: true // Chỉ dùng cho Group
   }
 }, {
   tableName: 'conversations'
