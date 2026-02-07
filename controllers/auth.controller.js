@@ -1,4 +1,5 @@
 import authService from '../services/auth.service.js';
+import asyncHandler from '../utils/async-handler.js';
 
 /**
  * Controller xử lý các yêu cầu HTTP liên quan đến xác thực.
@@ -18,11 +19,10 @@ class AuthController {
 
   // --- Action Methods ---
 
-  async login(req, res) {
+  login = asyncHandler(async (req, res) => {
     const { username, password } = req.body;
     try {
       const user = await authService.login(username, password);
-      // Lưu thông tin cơ bản vào session
       req.session.user = {
         id: user.id,
         username: user.username,
@@ -33,9 +33,9 @@ class AuthController {
     } catch (error) {
       res.render('pages/login', { title: 'Đăng nhập', error: error.message });
     }
-  }
+  });
 
-  async register(req, res) {
+  register = asyncHandler(async (req, res) => {
     const { username, password, displayName } = req.body;
     try {
       await authService.register({ username, password, displayName });
@@ -43,7 +43,7 @@ class AuthController {
     } catch (error) {
       res.render('pages/register', { title: 'Đăng ký', error: error.message });
     }
-  }
+  });
 
   logout(req, res) {
     req.session.destroy();

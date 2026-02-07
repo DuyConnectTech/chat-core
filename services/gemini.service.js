@@ -8,7 +8,7 @@ class GeminiService {
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY') {
       this.genAI = new GoogleGenerativeAI(apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: process.env.MODEL_AI || 'gemini-1.5-flash' });
+      this.model = this.genAI.getGenerativeModel({ model: process.env.MODEL_AI || 'gemini-2.5-flash' });
     } else {
       console.warn('⚠️ Gemini API Key chưa được cấu hình hoặc đang để mặc định.');
     }

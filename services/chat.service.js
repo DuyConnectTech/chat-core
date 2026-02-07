@@ -21,7 +21,7 @@ class ChatService {
         }
       ],
       // Lọc ra các conversation mà user này tham gia
-      where: sequelize.literal(`id IN (SELECT conversation_id FROM conversation_members WHERE user_id = '${userId}')`),
+      where: sequelize.literal(`\`Conversation\`.\`id\` IN (SELECT conversation_id FROM conversation_members WHERE user_id = '${userId}')`),
       order: [['updated_at', 'DESC']]
     });
   }

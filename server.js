@@ -63,6 +63,10 @@ app.use("/", viewRoutes);
 import webSocketService from "./services/socket.service.js";
 webSocketService(io);
 
+// Error Handling (Must be after routes)
+import { debugConfig } from "./utils/debug.js";
+debugConfig(app);
+
 // Database Sync & Server Start
 import { sequelize } from "./models/index.js";
 import mysql from "mysql2/promise";
