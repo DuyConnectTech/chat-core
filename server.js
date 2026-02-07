@@ -51,25 +51,26 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Test route
-app.get('/', (req, res) => {
-  res.render('pages/index', { title: 'Chat Core - Home' });
-});
+// Routes
+import viewRoutes from './routes/view.routes.js';
+app.use('/', viewRoutes);
 
-// Import and Register Socket Logic (Coming soon in Task 3.2)
-// import webSocketService from './services/socket.service.js';
-// webSocketService(io);
+// Socket.io Logic
+import webSocketService from './services/socket.service.js';
+webSocketService(io);
 
 // Database Sync & Server Start
-import sequelize from './config/database.js';
+import { sequelize } from './models/index.js';
 
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected successfully.');
     
-    // Sync models (Coming soon in Phase 2)
-    // await sequelize.sync({ alter: true });
+    // Sync models
+    // alter: true sẽ cập nhật cấu trúc bảng nếu có thay đổi mà không làm mất dữ liệu
+    await sequelize.sync({ alter: true });
+    console.log('✅ Database models synced.');
 
     httpServer.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);

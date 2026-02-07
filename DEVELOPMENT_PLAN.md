@@ -48,20 +48,21 @@ Schema được thiết kế theo hướng **Universal User** (Giống Messenger
 - [x] **Task 1.4:** Thiết lập Server Entry Point (`app.js`) và Middleware cơ bản (Helmet, CORS, Session).
 
 ### Giai đoạn 2: Tính năng Xác thực & Người dùng (Auth)
-- [ ] **Task 2.1:** Viết `auth.service.js` (Register, Login với Bcrypt).
-- [ ] **Task 2.2:** Viết Giao diện Đăng nhập/Đăng ký (EJS + SCSS).
+- [x] **Task 2.0:** Định nghĩa Sequelize Models & Associations.
+- [x] **Task 2.1:** Viết `auth.service.js` (Register, Login với Bcrypt).
+- [x] **Task 2.2:** Viết Giao diện Đăng nhập/Đăng ký (EJS + SCSS).
 - [ ] **Task 2.3:** Middleware kiểm tra quyền truy cập (Auth Guard).
 
 ### Giai đoạn 3: Tính năng Chat Real-time (Core Chat)
-- [ ] **Task 3.1:** Viết `chat.service.js` (Tạo conversation, lưu message).
-- [ ] **Task 3.2:** Tích hợp Socket.io (Handle connection, join room, send message).
-- [ ] **Task 3.3:** Xây dựng giao diện Chat chính (Sidebar list, Chat Window).
-- [ ] **Task 3.4:** Xử lý Trạng thái Online/Offline.
+- [x] **Task 3.1:** Viết `chat.service.js` (Tạo conversation, lưu message).
+- [x] **Task 3.2:** Tích hợp Socket.io (Handle connection, join room, send message).
+- [x] **Task 3.3:** Xây dựng giao diện Chat chính (Sidebar list, Chat Window).
+- [x] **Task 3.4:** Xử lý Trạng thái Online/Offline.
 
 ### Giai đoạn 4: Quản lý Group Chat
-- [ ] **Task 4.1:** Logic tạo nhóm và thêm/xóa thành viên.
-- [ ] **Task 4.2:** Tin nhắn hệ thống (Ví dụ: "Admin đã thêm bạn vào nhóm").
-- [ ] **Task 4.3:** Giao diện quản lý thông tin nhóm.
+- [x] **Task 4.1:** Logic tạo nhóm và thêm/xóa thành viên.
+- [x] **Task 4.2:** Tin nhắn hệ thống (Ví dụ: "Admin đã thêm bạn vào nhóm").
+- [x] **Task 4.3:** Giao diện quản lý thông tin nhóm.
 
 ### Giai đoạn 5: Tích hợp Gemini AI
 - [ ] **Task 5.1:** Viết `gemini.service.js` kết nối Google Generative AI SDK.
@@ -80,10 +81,10 @@ Schema được thiết kế theo hướng **Universal User** (Giống Messenger
 | Nhiệm vụ | Trạng thái | Ngày hoàn thành | Ghi chú |
 | :--- | :--- | :--- | :--- |
 | **Giai đoạn 1** | ✅ Hoàn thành | 07/02/2026 | Khởi tạo cấu trúc xong. |
-| **Giai đoạn 2** | 🔄 Đang chạy | - | Định nghĩa Models & Auth. |
-| **Giai đoạn 3** | ⏳ Chờ | - | - |
-| **Giai đoạn 4** | ⏳ Chờ | - | - |
-| **Giai đoạn 5** | ⏳ Chờ | - | - |
+| **Giai đoạn 2** | ✅ Hoàn thành | 07/02/2026 | Models & Auth xong. |
+| **Giai đoạn 3** | ✅ Hoàn thành | 07/02/2026 | Lõi Chat Real-time xong. |
+| **Giai đoạn 4** | ✅ Hoàn thành | 07/02/2026 | Phát triển Group Chat xong. |
+| **Giai đoạn 5** | 🔄 Đang chạy | - | Tích hợp Gemini AI. |
 | **Giai đoạn 6** | ⏳ Chờ | - | - |
 
 ---
