@@ -1,10 +1,25 @@
 // Lấy thông tin user từ HTML
 const userInfo = document.getElementById('user-info');
-const currentUserId = userInfo.dataset.id;
-const currentUserName = userInfo.dataset.name;
+const currentUserId = userInfo ? userInfo.dataset.id : null;
+const currentUserName = userInfo ? userInfo.dataset.name : null;
 
-// Khởi tạo Socket.io
-const socket = io({ auth: { userId: currentUserId } });
+// Hàm lấy cookie
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// Chỉ khởi tạo Socket nếu user đã đăng nhập
+let socket = null;
+if (currentUserId) {
+    socket = io({ 
+        auth: { 
+            userId: currentUserId,
+            token: getCookie('accessToken') 
+        } 
+    });
+}
 
 // State
 let activeConversationId = null;
@@ -63,7 +78,6 @@ function appendMessage(msg, prepend = false) {
         if (msg.type === 'image') {
             contentHtml = `<img src="${msg.content}" class="img-fluid rounded mt-2" style="max-height: 300px; cursor: pointer;" onclick="window.open(this.src)">`;
         } else if (msg.type === 'audio') {
-            // Loại bỏ w-100 để dùng width cố định từ SCSS
             contentHtml = `<audio controls class="mt-2" src="${msg.content}"></audio>`;
         } else {
             contentHtml = `<span>${msg.content}</span>`;
@@ -102,7 +116,7 @@ function appendMessage(msg, prepend = false) {
 }
 
 /**
- * Load tin nhắn (Hỗ trợ Lazy Loading)
+ * Load tin nhắn
  */
 async function loadMessages(conversationId, beforeId = null) {
     if (isLoadingMore) return;
@@ -124,20 +138,18 @@ async function loadMessages(conversationId, beforeId = null) {
     }
 }
 
-/**
- * Xử lý cuộn để tải thêm
- */
-messagesList.addEventListener('scroll', () => {
-    if (messagesList.scrollTop === 0 && hasMoreMessages && !isLoadingMore) {
-        const firstMsg = messagesList.querySelector('.msg-wrapper, .msg-system');
-        const beforeId = firstMsg ? firstMsg.dataset.msgId : null;
-        if (beforeId) loadMessages(activeConversationId, beforeId);
-    }
-});
+// --- Event Listeners ---
 
-/**
- * Xử lý chọn cuộc hội thoại
- */
+if (messagesList) {
+    messagesList.addEventListener('scroll', () => {
+        if (messagesList.scrollTop === 0 && hasMoreMessages && !isLoadingMore) {
+            const firstMsg = messagesList.querySelector('.msg-wrapper, .msg-system');
+            const beforeId = firstMsg ? firstMsg.dataset.msgId : null;
+            if (beforeId) loadMessages(activeConversationId, beforeId);
+        }
+    });
+}
+
 if (conversationList) {
     conversationList.addEventListener('click', (e) => {
         const item = e.target.closest('.conv-item');
@@ -156,7 +168,7 @@ if (conversationList) {
         chatWindow.classList.remove('d-none');
         chatWindow.classList.add('d-flex');
 
-        socket.emit('room:join', activeConversationId);
+        if(socket) socket.emit('room:join', activeConversationId);
         loadMessages(activeConversationId);
 
         const isGroup = item.dataset.type === 'group';
@@ -167,18 +179,18 @@ if (conversationList) {
 }
 
 function updateDropdownUI(isGroup, isOwner, botActive) {
-    leaveGroupBtn.style.display = isGroup ? 'block' : 'none';
-    deleteGroupBtn.style.display = (isGroup && isOwner) ? 'block' : 'none';
-    botToggleBtn.style.display = 'block';
-    botToggleBtn.innerHTML = botActive ? 
-        '<i class="fas fa-robot me-2 text-success"></i>Tắt AI Bot' : 
-        '<i class="fas fa-robot me-2 text-muted"></i>Bật AI Bot';
-    botToggleBtn.dataset.active = botActive;
+    if(leaveGroupBtn) leaveGroupBtn.style.display = isGroup ? 'block' : 'none';
+    if(deleteGroupBtn) deleteGroupBtn.style.display = (isGroup && isOwner) ? 'block' : 'none';
+    if(botToggleBtn) {
+        botToggleBtn.style.display = 'block';
+        botToggleBtn.innerHTML = botActive ? 
+            '<i class="fas fa-robot me-2 text-success"></i>Tắt AI Bot' : 
+            '<i class="fas fa-robot me-2 text-muted"></i>Bật AI Bot';
+        botToggleBtn.dataset.active = botActive;
+    }
 }
 
-/**
- * AI Bot Toggle
- */
+// --- Bot Toggle ---
 if (botToggleBtn) {
     botToggleBtn.addEventListener('click', async () => {
         const currentActive = botToggleBtn.dataset.active === 'true';
@@ -199,9 +211,7 @@ if (botToggleBtn) {
     });
 }
 
-/**
- * Group Actions
- */
+// --- Group Actions ---
 if (leaveGroupBtn) {
     leaveGroupBtn.addEventListener('click', async () => {
         if (!confirm('Bạn muốn rời nhóm?')) return;
@@ -218,62 +228,53 @@ if (deleteGroupBtn) {
     });
 }
 
-/**
- * Recall / Delete
- */
-async function recallMessage(messageId) {
+// --- Recall / Delete ---
+window.recallMessage = async function(messageId) {
     if (!confirm('Bạn có chắc muốn thu hồi tin nhắn này?')) return;
     const res = await fetch(`/api/messages/${messageId}/recall`, { method: 'DELETE' });
     const data = await res.json();
-    if (data.success) socket.emit('message:recall', { conversationId: activeConversationId, messageId });
+    if (data.success && socket) socket.emit('message:recall', { conversationId: activeConversationId, messageId });
     else alert(data.error || 'Lỗi thu hồi');
 }
 
-async function deleteMessageForMe(messageId) {
+window.deleteMessageForMe = async function(messageId) {
     if (!confirm('Xóa tin nhắn này phía bạn?')) return;
     await fetch(`/api/messages/${messageId}/me`, { method: 'DELETE' });
     const el = document.querySelector(`[data-msg-id="${messageId}"]`);
     if (el) el.remove();
 }
 
-window.recallMessage = recallMessage;
-window.deleteMessageForMe = deleteMessageForMe;
-
-/**
- * Form Submit
- */
+// --- Form Submit ---
 if (chatForm) {
     chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const content = msgInput.value.trim();
-        if (!content || !activeConversationId) return;
+        if (!content || !activeConversationId || !socket) return;
         socket.emit('message:send', { conversationId: activeConversationId, content, type: 'text' });
         msgInput.value = '';
         msgInput.focus();
     });
 }
 
-/**
- * Socket Listeners
- */
-socket.on('message:new', (msg) => {
-    if (msg.conversation_id === activeConversationId) appendMessage(msg);
-});
+// --- Socket Listeners ---
+if (socket) {
+    socket.on('message:new', (msg) => {
+        if (msg.conversation_id === activeConversationId) appendMessage(msg);
+    });
 
-socket.on('message:recalled', ({ messageId }) => {
-    const wrapper = document.querySelector(`[data-msg-id="${messageId}"]`);
-    if (wrapper) {
-        const bubble = wrapper.querySelector('.msg-bubble');
-        bubble.classList.add('msg-recalled');
-        bubble.innerHTML = 'Tin nhắn đã bị thu hồi';
-        const actions = wrapper.querySelector('.msg-actions');
-        if (actions) actions.remove();
-    }
-});
+    socket.on('message:recalled', ({ messageId }) => {
+        const wrapper = document.querySelector(`[data-msg-id="${messageId}"]`);
+        if (wrapper) {
+            const bubble = wrapper.querySelector('.msg-bubble');
+            bubble.classList.add('msg-recalled');
+            bubble.innerHTML = 'Tin nhắn đã bị thu hồi';
+            const actions = wrapper.querySelector('.msg-actions');
+            if (actions) actions.remove();
+        }
+    });
+}
 
-/**
- * Multimedia
- */
+// --- Multimedia ---
 if (uploadBtn) {
     uploadBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async (e) => {
@@ -285,7 +286,7 @@ if (uploadBtn) {
         try {
             const res = await fetch('/api/upload', { method: 'POST', body: formData });
             const data = await res.json();
-            socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'image' });
+            if(socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'image' });
         } catch(err) { alert('Lỗi upload'); }
         finally {
             uploadBtn.innerHTML = '<i class="fas fa-image"></i>';
@@ -294,6 +295,7 @@ if (uploadBtn) {
     });
 }
 
+// --- Recording ---
 if (recordBtn) {
     recordBtn.addEventListener('click', () => {
         if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
@@ -313,7 +315,7 @@ async function startRecording() {
             formData.append('file', audioBlob, 'recording.webm');
             const res = await fetch('/api/upload', { method: 'POST', body: formData });
             const data = await res.json();
-            socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'audio' });
+            if(socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'audio' });
         };
         mediaRecorder.start();
         recordBtn.classList.replace('btn-outline-secondary', 'btn-danger');
@@ -327,16 +329,16 @@ async function startRecording() {
 }
 
 function stopRecording() {
-    mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    if(mediaRecorder) {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    }
     clearInterval(recordInterval);
-    recordBtn.classList.replace('btn-danger', 'btn-outline-secondary');
-    recordingStatus.classList.add('d-none');
+    if(recordBtn) recordBtn.classList.replace('btn-danger', 'btn-outline-secondary');
+    if(recordingStatus) recordingStatus.classList.add('d-none');
 }
 
-/**
- * AI Suggest
- */
+// --- AI Suggest ---
 if (aiSuggestBtn) {
     aiSuggestBtn.addEventListener('click', async () => {
         if (!activeConversationId) return;
@@ -345,10 +347,11 @@ if (aiSuggestBtn) {
         const response = await fetch(`/api/conversations/${activeConversationId}/suggest`);
         const data = await response.json();
         if (data.suggestion) { msgInput.value = data.suggestion; msgInput.focus(); }
-        aiSuggestBtn.disabled = false; aiSuggestBtn.innerHTML = '<i class="fas fa-robot"></i>';
+        aiSuggestBtn.disabled = false; aiSuggestBtn.innerHTML = '<i class="fas fa-magic"></i>';
     });
 }
 
+// --- New Chat/Group Init ---
 document.querySelectorAll('.start-chat-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         await fetch('/api/conversations/private', {
@@ -359,6 +362,7 @@ document.querySelectorAll('.start-chat-btn').forEach(btn => {
     });
 });
 
+const createGroupForm = document.getElementById('create-group-form');
 if (createGroupForm) {
     createGroupForm.addEventListener('submit', async (e) => {
         e.preventDefault();

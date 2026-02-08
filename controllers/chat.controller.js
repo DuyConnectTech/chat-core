@@ -2,18 +2,17 @@ import chatService from '../services/chat.service.js';
 import { User, Conversation } from '../models/index.js';
 import { Op } from 'sequelize';
 import asyncHandler from '../utils/async-handler.js';
+import geminiService from '../services/gemini.service.js';
 
 class ChatController {
   /**
    * Render trang chat chính
+   * @method GET /chat
    */
-  renderChatPage = asyncHandler(async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-
-    const userId = req.session.user.id;
+  renderChat = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
     const conversations = await chatService.getConversations(userId);
     
-    // Lấy danh sách user khác để có thể bắt đầu chat mới
     const otherUsers = await User.findAll({
       where: { id: { [Op.ne]: userId }, role: { [Op.ne]: 'bot' } },
       limit: 10
@@ -21,126 +20,120 @@ class ChatController {
 
     res.render('pages/chat', {
       title: 'Chat Room',
-      user: req.session.user,
+      user: req.user,
       conversations,
       otherUsers
     });
   });
 
   /**
+   * API lấy danh sách hội thoại
+   * @method GET /api/conversations
+   */
+  getConversations = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const conversations = await chatService.getConversations(userId);
+    res.json(conversations);
+  });
+
+  /**
    * API lấy tin nhắn của một cuộc hội thoại
+   * @method GET /api/conversations/:id/messages
    */
   getMessages = asyncHandler(async (req, res) => {
-    const { conversationId } = req.params;
-    const messages = await chatService.getMessages(conversationId);
+    const { id } = req.params;
+    const { limit, beforeId } = req.query;
+    const messages = await chatService.getMessages(id, limit, beforeId);
     res.json(messages);
   });
 
   /**
    * API bắt đầu chat với một User (Chat 1-1)
+   * @method POST /api/conversations/private
    */
-  startPrivateChat = asyncHandler(async (req, res) => {
-    const userId = req.session.user.id;
+  createPrivateChat = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
     const { targetUserId } = req.body;
-    
     const conversation = await chatService.findOrCreatePrivateChat(userId, targetUserId);
     res.json(conversation);
   });
 
   /**
    * API tạo nhóm chat mới
+   * @method POST /api/conversations/group
    */
-  createGroup = asyncHandler(async (req, res) => {
-    const creatorId = req.session.user.id;
+  createGroupChat = asyncHandler(async (req, res) => {
+    const creatorId = req.user.id;
     const { title, memberIds } = req.body;
-    
     const conversation = await chatService.createGroupChat(title, creatorId, memberIds);
     res.json(conversation);
   });
 
   /**
-   * API lấy gợi ý từ AI cho cuộc hội thoại
+   * API Bật/Tắt Bot AI
+   * @method POST /api/conversations/:id/bot
    */
-  getAiSuggestion = asyncHandler(async (req, res) => {
-    const { conversationId } = req.params;
-    const messages = await chatService.getMessages(conversationId, 10);
-    const context = messages.map(m => `${m.sender?.display_name || 'User'}: ${m.content}`).join('\n');
-    
-    const geminiService = await import('../services/gemini.service.js').then(m => m.default);
-    const suggestion = await geminiService.getSuggestedReply(context);
-    res.json({ suggestion });
-  });
-
-  /**
-   * API xử lý upload file (Image/Audio)
-   */
-  uploadFile = asyncHandler(async (req, res) => {
-    if (!req.file) {
-      throw new Error('Không có file nào được tải lên');
-    }
-
-    const folder = req.file.mimetype.startsWith('image/') ? 'images' : 'audio';
-    const fileUrl = `/uploads/${folder}/${req.file.filename}`;
-
-    res.json({
-      url: fileUrl,
-      mimetype: req.file.mimetype,
-      filename: req.file.originalname
-    });
-  });
-
-  /**
-   * API Thu hồi tin nhắn
-   */
-  recallMessage = asyncHandler(async (req, res) => {
-    const { messageId } = req.params;
-    const userId = req.session.user.id;
-    const message = await chatService.recallMessage(messageId, userId);
-    res.json({ success: true, message });
-  });
-
-  /**
-   * API Xóa tin nhắn phía mình
-   */
-  deleteMessage = asyncHandler(async (req, res) => {
-    const { messageId } = req.params;
-    const userId = req.session.user.id;
-    await chatService.deleteMessageForMe(messageId, userId);
-    res.json({ success: true });
+  toggleBot = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { active } = req.body;
+    await chatService.toggleBot(id, active);
+    res.json({ success: true, is_bot_active: active });
   });
 
   /**
    * API Rời khỏi nhóm
+   * @method POST /api/conversations/:id/leave
    */
   leaveGroup = asyncHandler(async (req, res) => {
-    const { conversationId } = req.params;
-    const userId = req.session.user.id;
-    await chatService.leaveGroup(conversationId, userId);
+    const { id } = req.params;
+    const userId = req.user.id;
+    await chatService.leaveGroup(id, userId);
     res.json({ success: true });
   });
 
   /**
    * API Xóa nhóm (Chỉ Owner)
+   * @method DELETE /api/conversations/:id
    */
   deleteGroup = asyncHandler(async (req, res) => {
-    const { conversationId } = req.params;
-    const userId = req.session.user.id;
-    await chatService.deleteGroup(conversationId, userId);
+    const { id } = req.params;
+    const userId = req.user.id;
+    await chatService.deleteGroup(id, userId);
     res.json({ success: true });
   });
 
   /**
-   * API Bật/Tắt Bot AI cho cuộc hội thoại
+   * API Thu hồi tin nhắn
+   * @method POST /api/messages/:id/recall
    */
-  toggleBot = asyncHandler(async (req, res) => {
-    const { conversationId } = req.params;
-    const { active } = req.body;
-    
-    const conversation = await Conversation.findByPk(conversationId);
-    if (!conversation) throw new Error('Cuộc hội thoại không tồn tại');
-    
-    await conversation.update({ is_bot_active: active });
-    res.json({ success: true, is_bot_active: active });
+  recallMessage = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const message = await chatService.recallMessage(id, userId);
+    res.json({ success: true, message });
+  });
+
+  /**
+   * API Xóa tin nhắn phía mình
+   * @method DELETE /api/messages/:id/me
+   */
+  deleteMessageForMe = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    await chatService.deleteMessageForMe(id, userId);
+    res.json({ success: true });
+  });
+
+  /**
+   * API Gợi ý trả lời bằng AI
+   * @method POST /api/conversations/:id/suggest-reply
+   */
+  suggestReply = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const messages = await chatService.getMessages(id, 10);
+    const context = messages.map(m => `${m.sender?.display_name || 'User'}: ${m.content}`).join('\n');
+    const suggestion = await geminiService.generateReply(context, []);
+    res.json({ suggestion });
   });
 }
 

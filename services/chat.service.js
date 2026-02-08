@@ -236,6 +236,25 @@ class ChatService {
   }
 
   /**
+   * Lấy chi tiết một cuộc hội thoại
+   */
+  async getConversationDetail(conversationId) {
+    return await Conversation.findByPk(conversationId, {
+      include: [{ model: User, through: { attributes: ['role'] } }]
+    });
+  }
+
+  /**
+   * Bật/Tắt Bot trong cuộc hội thoại
+   */
+  async toggleBot(conversationId, active) {
+    return await Conversation.update(
+      { is_bot_active: active },
+      { where: { id: conversationId } }
+    );
+  }
+
+  /**
    * Xóa toàn bộ nhóm (Chỉ Owner)
    */
   async deleteGroup(conversationId, userId) {

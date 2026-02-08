@@ -1,66 +1,79 @@
-import bcrypt from 'bcryptjs';
-import { User } from '../models/index.js';
+import bcrypt from "bcryptjs";
+import { User } from "../models/index.js";
+import { Op } from "sequelize";
+import tokenService from "./token.service.js";
 
-/**
- * Service xử lý các nghiệp vụ liên quan đến xác thực người dùng.
- */
 class AuthService {
-  /**
-   * Đăng ký người dùng mới.
-   * @param {Object} userData - Thông tin người dùng (username, password, display_name)
-   * @returns {Promise<User>} Đối tượng User đã tạo
-   */
-  async register({ username, password, displayName }) {
-    // Kiểm tra xem username đã tồn tại chưa
-    const existingUser = await User.findOne({ where: { username } });
-    if (existingUser) {
-      throw new Error('Tên đăng nhập đã tồn tại');
+    /**
+     * Đăng ký người dùng mới
+     */
+    async register({ username, email, password, display_name }) {
+        // Kiểm tra trùng lặp username
+        const existingUsername = await User.findOne({ where: { username } });
+        if (existingUsername) throw new Error("Tên đăng nhập đã tồn tại");
+
+        // Kiểm tra trùng lặp email
+        const existingEmail = await User.findOne({ where: { email } });
+        if (existingEmail) throw new Error("Email đã tồn tại");
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        return await User.create({
+            username,
+            email,
+            password: hashedPassword,
+            display_name,
+            role: "user",
+        });
     }
 
-    // Mã hóa mật khẩu
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    /**
+     * Đăng nhập người dùng (Hỗ trợ Username hoặc Email)
+     */
+    async login({ identity, password, ipAddress, userAgent }) {
+        // Tìm user khớp với Username HOẶC Email
+        const user = await User.findOne({
+            where: {
+                [Op.or]: [{ username: identity }, { email: identity }],
+            },
+        });
 
-    // Tạo user mới
-    const user = await User.create({
-      username,
-      password_hash: passwordHash,
-      display_name: displayName
-    });
+        if (!user) throw new Error("Thông tin đăng nhập không chính xác");
 
-    return user;
-  }
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) throw new Error("Thông tin đăng nhập không chính xác");
 
-  /**
-   * Đăng nhập người dùng.
-   * @param {string} username - Tên đăng nhập
-   * @param {string} password - Mật khẩu
-   * @returns {Promise<User>} Đối tượng User nếu thành công
-   */
-  async login(username, password) {
-    const user = await User.findOne({ where: { username } });
-    if (!user) {
-      throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác');
+        const accessToken = tokenService.generateAccessToken(user);
+        const refreshToken = await tokenService.createRefreshToken(user.id, ipAddress, userAgent);
+
+        return { user, accessToken, refreshToken };
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
-      throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác');
+    /**
+     * Làm mới Access Token (Refresh Flow)
+     */
+    async refreshAccessToken(rawRefreshToken, ipAddress, userAgent) {
+        const tokenRecord = await tokenService.verifyRefreshToken(rawRefreshToken);
+        if (!tokenRecord) throw new Error("Phiên đăng nhập hết hạn hoặc không hợp lệ");
+
+        const user = await User.findByPk(tokenRecord.user_id);
+        if (!user) throw new Error("Người dùng không tồn tại");
+
+        await tokenService.revokeRefreshToken(rawRefreshToken);
+
+        const newAccessToken = tokenService.generateAccessToken(user);
+        const newRefreshToken = await tokenService.createRefreshToken(user.id, ipAddress, userAgent);
+
+        return { user, accessToken: newAccessToken, refreshToken: newRefreshToken };
     }
 
-    return user;
-  }
-
-  /**
-   * Tìm người dùng theo ID (Dùng cho Session/Middleware)
-   * @param {string} id - ID người dùng
-   * @returns {Promise<User>}
-   */
-  async findUserById(id) {
-    return await User.findByPk(id, {
-      attributes: { exclude: ['password_hash'] }
-    });
-  }
+    /**
+     * Đăng xuất
+     */
+    async logout(rawRefreshToken) {
+        if (rawRefreshToken) {
+            await tokenService.revokeRefreshToken(rawRefreshToken);
+        }
+    }
 }
 
 export default new AuthService();

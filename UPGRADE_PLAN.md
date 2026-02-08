@@ -50,9 +50,9 @@ Tài liệu này phác thảo lộ trình nâng cấp toàn diện cho dự án 
 
 ## 4. LỘ TRÌNH PHÁT TRIỂN (PHASES)
 
-### Giai đoạn 1: Nâng cấp Cơ sở dữ liệu & Helper (Foundation)
-- [x] Cập nhật Models (`Message`, `Conversation`).
-- [x] Chạy Migration (`sequelize.sync({ alter: true })`).
+### Giai đoạn 1: Nâng cấp Cơ sở dữ liệu & Auth (Foundation)
+- [x] Cập nhật Models (`Message`, `Conversation`, `PersonalAccessToken`, `Session`).
+- [x] Triển khai JWT + Refresh Token Flow (Stateless Auth).
 - [x] Cấu hình `Multer` trong `utils/upload.js` để xử lý upload file.
 
 ### Giai đoạn 2: Tính năng Đa phương tiện (Multimedia)

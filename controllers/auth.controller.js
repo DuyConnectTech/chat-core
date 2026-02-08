@@ -1,54 +1,103 @@
-import authService from '../services/auth.service.js';
-import asyncHandler from '../utils/async-handler.js';
+import authService from "../services/auth.service.js";
+import asyncHandler from "../utils/async-handler.js";
 
-/**
- * Controller xử lý các yêu cầu HTTP liên quan đến xác thực.
- */
 class AuthController {
-  // --- Rendering Methods ---
+    /**
+     * Render trang đăng ký
+     * @method GET /register
+     */
+    renderRegister = (req, res) => {
+        res.render("pages/register", { title: "Đăng ký", error: null });
+    };
 
-  renderLogin(req, res) {
-    if (req.session.user) return res.redirect('/chat');
-    res.render('pages/login', { title: 'Đăng nhập', error: null });
-  }
+    /**
+     * Xử lý đăng ký
+     * @method POST /register
+     */
+    register = asyncHandler(async (req, res) => {
+        const { username, email, password, display_name } = req.body;
+        await authService.register({ username, email, password, display_name });
+        res.json({ success: true, message: "Đăng ký thành công" });
+    });
 
-  renderRegister(req, res) {
-    if (req.session.user) return res.redirect('/chat');
-    res.render('pages/register', { title: 'Đăng ký', error: null });
-  }
+    /**
+     * Render trang đăng nhập
+     * @method GET /login
+     */
+    renderLogin = (req, res) => {
+        res.render("pages/login", { title: "Đăng nhập", error: null });
+    };
 
-  // --- Action Methods ---
+    /**
+     * Xử lý đăng nhập
+     * @method POST /login
+     */
+    login = asyncHandler(async (req, res) => {
+        const { identity, password } = req.body;
+        const ipAddress = req.ip;
+        const userAgent = req.get("User-Agent");
 
-  login = asyncHandler(async (req, res) => {
-    const { username, password } = req.body;
-    try {
-      const user = await authService.login(username, password);
-      req.session.user = {
-        id: user.id,
-        username: user.username,
-        display_name: user.display_name,
-        role: user.role
-      };
-      res.redirect('/chat');
-    } catch (error) {
-      res.render('pages/login', { title: 'Đăng nhập', error: error.message });
-    }
-  });
+        const { user, accessToken, refreshToken } = await authService.login({
+            identity,
+            password,
+            ipAddress,
+            userAgent,
+        });
 
-  register = asyncHandler(async (req, res) => {
-    const { username, password, displayName } = req.body;
-    try {
-      await authService.register({ username, password, displayName });
-      res.redirect('/login?msg=registered');
-    } catch (error) {
-      res.render('pages/register', { title: 'Đăng ký', error: error.message });
-    }
-  });
+        // Gửi Refresh Token qua HttpOnly Cookie
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 ngày
+            sameSite: "strict",
+        });
 
-  logout(req, res) {
-    req.session.destroy();
-    res.redirect('/login');
-  }
+        res.json({
+            success: true,
+            accessToken,
+            user: {
+                id: user.id,
+                username: user.username,
+                display_name: user.display_name,
+                role: user.role,
+            },
+        });
+    });
+
+    /**
+     * Làm mới Access Token
+     * @method POST /refresh
+     */
+    refresh = asyncHandler(async (req, res) => {
+        const rawRefreshToken = req.cookies.refreshToken;
+        if (!rawRefreshToken) return res.status(401).json({ error: "Không tìm thấy Refresh Token" });
+
+        const ipAddress = req.ip;
+        const userAgent = req.get("User-Agent");
+
+        const { accessToken, refreshToken } = await authService.refreshAccessToken(rawRefreshToken, ipAddress, userAgent);
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            sameSite: "strict",
+        });
+
+        res.json({ success: true, accessToken });
+    });
+
+    /**
+     * Đăng xuất
+     * @method POST /logout
+     */
+    logout = asyncHandler(async (req, res) => {
+        const rawRefreshToken = req.cookies.refreshToken;
+        await authService.logout(rawRefreshToken);
+
+        res.clearCookie("refreshToken");
+        res.json({ success: true, message: "Đã đăng xuất" });
+    });
 }
 
 export default new AuthController();

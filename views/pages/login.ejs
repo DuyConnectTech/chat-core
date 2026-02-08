@@ -11,24 +11,62 @@
     <div class="auth-card">
         <h2 class="text-center mb-4">Đăng nhập</h2>
         
-        <% if (error) { %>
-            <div class="alert alert-danger"><%= error %></div>
-        <% } %>
+        <div id="alert-box" class="alert alert-danger d-none"></div>
 
-        <form action="/login" method="POST">
+        <form id="login-form">
             <div class="mb-3">
-                <label class="form-label">Tên đăng nhập</label>
-                <input type="text" name="username" class="form-control" required>
+                <label class="form-label">Tên đăng nhập hoặc Email</label>
+                <input type="text" id="identity" class="form-control" required placeholder="username or email@gmail.com">
             </div>
             <div class="mb-3">
                 <label class="form-label">Mật khẩu</label>
-                <input type="password" name="password" class="form-control" required>
+                <input type="password" id="password" class="form-control" required placeholder="********">
             </div>
-            <button type="submit" class="btn btn-primary w-100 mb-3">Đăng nhập</button>
+            <button type="submit" id="submit-btn" class="btn btn-primary w-100 mb-3">Đăng nhập</button>
             <div class="text-center">
                 <a href="/register" class="text-decoration-none">Chưa có tài khoản? Đăng ký ngay</a>
             </div>
         </form>
     </div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const alertBox = document.getElementById('alert-box');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const identity = document.getElementById('identity').value;
+            const password = document.getElementById('password').value;
+
+            alertBox.classList.add('d-none');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Đang xử lý...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identity, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.cookie = `accessToken=${data.accessToken}; path=/; max-age=3600; SameSite=Strict`;
+                    window.location.href = '/';
+                } else {
+                    alertBox.innerText = data.error || 'Đăng nhập thất bại';
+                    alertBox.classList.remove('d-none');
+                }
+            } catch (error) {
+                alertBox.innerText = 'Lỗi kết nối server';
+                alertBox.classList.remove('d-none');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Đăng nhập';
+            }
+        });
+    </script>
 </body>
 </html>

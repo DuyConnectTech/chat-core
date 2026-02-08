@@ -12,6 +12,8 @@ class GeminiService {
     } else {
       console.warn('⚠️ Gemini API Key chưa được cấu hình hoặc đang để mặc định.');
     }
+    const limitHistory = process.env.LIMIT_HISTORY_CHAT || '5';
+    this.limitHistory = parseInt(limitHistory, 10);
   }
 
   /**
@@ -31,7 +33,7 @@ class GeminiService {
         Hãy gợi ý một câu trả lời ngắn gọn, lịch sự và phù hợp cho Admin.
         
         Lịch sử:
-        ${historyContext}
+        ${historyContext.slice(-this.limitHistory)}
         
         Chỉ trả về nội dung câu trả lời, không thêm lời dẫn.
       `;

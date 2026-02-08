@@ -1,102 +1,54 @@
 import express from "express";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import session from "express-session";
-import helmet from "helmet";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
+import http from "node:http";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import helmet from "helmet";
 
-// Load environment variables
+import { PUBLIC_DIR, VIEWS_DIR } from "../utils/path.js";
+import { sequelize } from "./models/index.js";
+import socketService from "./services/socket.service.js";
+import viewRoutes from "./routes/view.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+
 dotenv.config();
 
-// Helpers for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"],
-    },
-});
+const server = http.createServer(app);
 
-// Port configuration
-const PORT = process.env.PORT || 3001;
-
-// Middlewares
-app.use(
-    helmet({
-        contentSecurityPolicy: false, // Tắt CSP để dễ phát triển view engine
-    }),
-);
+// --- Middleware ---
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(cookieParser());
 
-// Session configuration
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: process.env.NODE_ENV === "production",
-            maxAge: 24 * 60 * 60 * 1000, // 1 day
-        },
-    }),
-);
+// Static Files
+app.use(express.static(PUBLIC_DIR));
 
-// View engine setup
+// View Engine
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+app.set("views", VIEWS_DIR);
 
-// Routes
-import viewRoutes from "./routes/view.routes.js";
+// --- Routes ---
 app.use("/", viewRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api", chatRoutes); // Chứa đầy đủ các API Chat
 
-// Socket.io Logic
-import webSocketService from "./services/socket.service.js";
-webSocketService(io);
+// --- Database & Socket ---
+socketService.init(server);
 
-// Error Handling (Must be after routes)
-import { debugConfig } from "./utils/debug.js";
-debugConfig(app);
+const PORT = process.env.PORT || 3000;
 
-// Database Sync & Server Start
-import { sequelize } from "./models/index.js";
-import mysql from "mysql2/promise";
-
-const startServer = async () => {
-    try {
-        // 1. Tự động tạo database nếu chưa tồn tại (Dành cho Local Dev)
-        const connection = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
+sequelize
+    .sync({ alter: true })
+    .then(() => {
+        console.log("Database connected & synced");
+        server.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT}`);
         });
-        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\`;`);
-        await connection.end();
-
-        // 2. Kết nối Sequelize
-        await sequelize.authenticate();
-        console.log("✅ Database connected successfully.");
-
-        // 3. Sync models
-        await sequelize.sync({ alter: true });
-        console.log("✅ Database models synced.");
-
-        httpServer.listen(PORT, () => {
-            console.log(`🚀 Server is running on http://localhost:${PORT}`);
-        });
-    } catch (error) {
-        console.error("❌ Unable to connect to the database:", error);
-    }
-};
-
-startServer();
+    })
+    .catch((err) => {
+        console.error("Unable to connect to database:", err);
+    });

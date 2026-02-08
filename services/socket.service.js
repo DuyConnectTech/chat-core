@@ -1,106 +1,112 @@
-import chatService from './chat.service.js';
-import { User, Conversation } from '../models/index.js';
-import userService from './user.service.js';
-import geminiService from './gemini.service.js';
+import { Server } from "socket.io";
+import chatService from "./chat.service.js";
+import userService from "./user.service.js";
+import geminiService from "./gemini.service.js";
+import tokenService from "./token.service.js";
 
-/**
- * Quản lý các sự kiện Socket.io
- */
-const webSocketService = (io) => {
-  io.on('connection', async (socket) => {
-    // 1. Xác thực Socket
-    const userId = socket.handshake.auth.userId;
-    if (!userId) return socket.disconnect();
-
-    console.log(`🔌 User connected: ${userId}`);
-    await User.update({ is_online: true }, { where: { id: userId } });
-    io.emit('user:status', { userId, status: 'online' });
-
-    // 2. Tham gia phòng chat
-    socket.on('room:join', (roomId) => {
-      socket.join(roomId);
-    });
-
-    // 3. Xử lý gửi tin nhắn
-    socket.on('message:send', async (data) => {
-      const { conversationId, content, type } = data;
-      try {
-        const message = await chatService.sendMessage({
-          conversationId,
-          senderId: userId,
-          content,
-          type
+class SocketService {
+    init(server) {
+        this.io = new Server(server, {
+            cors: { origin: "*" },
         });
 
-        // Broadcast tin nhắn tới mọi người
-        io.to(conversationId).emit('message:new', message);
+        // --- Middleware xác thực Socket ---
+        this.io.use((socket, next) => {
+            const token = socket.handshake.auth.token;
+            if (!token) return next(new Error("Authentication error: No token provided"));
 
-        // --- Logic AI Bot tự động ---
-        const conversation = await Conversation.findByPk(conversationId);
-        if (conversation.is_bot_active && type === 'text') {
-          handleBotReply(io, conversationId);
+            const decoded = tokenService.verifyAccessToken(token);
+            if (!decoded) return next(new Error("Authentication error: Invalid token"));
+
+            socket.userId = decoded.id;
+            next();
+        });
+
+        this.io.on("connection", (socket) => {
+            console.log(`User connected: ${socket.userId} (${socket.id})`);
+
+            // Tham gia phòng chat
+            socket.on("room:join", (conversationId) => {
+                socket.join(conversationId);
+                console.log(`User ${socket.userId} joined room: ${conversationId}`);
+            });
+
+            // Rời phòng chat
+            socket.on("room:leave", (conversationId) => {
+                socket.leave(conversationId);
+            });
+
+            // Gửi tin nhắn
+            socket.on("message:send", async ({ conversationId, content, type }) => {
+                try {
+                    const message = await chatService.sendMessage({
+                        conversationId,
+                        senderId: socket.userId,
+                        content,
+                        type,
+                    });
+
+                    // Phát tin nhắn cho cả phòng
+                    this.io.to(conversationId).emit("message:new", message);
+
+                    // Xử lý AI Bot tự động trả lời
+                    this.handleBotReply(conversationId, content);
+                } catch (error) {
+                    console.error("Socket Error (message:send):", error);
+                }
+            });
+
+            // Thu hồi tin nhắn
+            socket.on("message:recall", ({ conversationId, messageId }) => {
+                this.io.to(conversationId).emit("message:recalled", { messageId });
+            });
+
+            // Trạng thái đang gõ
+            socket.on("typing:start", (conversationId) => {
+                socket.to(conversationId).emit("typing:status", { userId: socket.userId, isTyping: true });
+            });
+
+            socket.on("typing:stop", (conversationId) => {
+                socket.to(conversationId).emit("typing:status", { userId: socket.userId, isTyping: false });
+            });
+
+            socket.on("disconnect", () => {
+                console.log(`User disconnected: ${socket.userId}`);
+            });
+        });
+    }
+
+    /**
+     * Logic Bot tự động trả lời
+     */
+    async handleBotReply(conversationId, userContent) {
+        try {
+            const botUser = await userService.findOrCreateBotUser();
+            const conversation = await chatService.getConversationDetail(conversationId);
+
+            if (conversation && conversation.is_bot_active) {
+                // Thông báo Bot đang gõ
+                this.io.to(conversationId).emit("typing:status", { userId: botUser.id, isTyping: true });
+
+                // Lấy ngữ cảnh hội thoại
+                const history = await chatService.getMessages(conversationId, 10);
+                const reply = await geminiService.generateReply(userContent, history);
+
+                // Gửi tin nhắn từ Bot
+                const botMsg = await chatService.sendMessage({
+                    conversationId,
+                    senderId: botUser.id,
+                    content: reply,
+                    type: "ai",
+                });
+
+                this.io.to(conversationId).emit("typing:status", { userId: botUser.id, isTyping: false });
+                this.io.to(conversationId).emit("message:new", botMsg);
+            }
+        } catch (err) {
+            console.error("Bot Error:", err);
         }
-      } catch (error) {
-        socket.emit('error', { message: 'Không thể gửi tin nhắn' });
-      }
-    });
-
-    // 4. Thu hồi tin nhắn
-    socket.on('message:recall', (data) => {
-      const { conversationId, messageId } = data;
-      io.to(conversationId).emit('message:recalled', { messageId });
-    });
-
-    // 5. Trạng thái đang gõ phím
-    socket.on('typing:start', (roomId) => {
-      socket.to(roomId).emit('typing:status', { userId, isTyping: true });
-    });
-
-    socket.on('typing:stop', (roomId) => {
-      socket.to(roomId).emit('typing:status', { userId, isTyping: false });
-    });
-
-    socket.on('disconnect', async () => {
-      await User.update({ is_online: false }, { where: { id: userId } });
-      io.emit('user:status', { userId, status: 'offline' });
-    });
-  });
-};
-
-/**
- * Hàm xử lý Bot trả lời
- */
-async function handleBotReply(io, conversationId) {
-  try {
-    const botUser = await userService.findOrCreateBotUser();
-    
-    // Giả lập Bot đang gõ
-    io.to(conversationId).emit('typing:status', { userId: botUser.id, isTyping: true });
-
-    // Lấy ngữ cảnh 10 tin nhắn gần nhất
-    const messages = await chatService.getMessages(conversationId, 10);
-    const context = messages.map(m => `${m.sender?.display_name || 'User'}: ${m.content}`).join('\n');
-
-    // Gọi Gemini
-    const replyContent = await geminiService.getSuggestedReply(context);
-
-    // Lưu và gửi tin nhắn Bot
-    const botMessage = await chatService.sendMessage({
-      conversationId,
-      senderId: botUser.id,
-      content: replyContent,
-      type: 'ai'
-    });
-
-    // Dừng gõ và gửi tin
-    setTimeout(() => {
-      io.to(conversationId).emit('typing:status', { userId: botUser.id, isTyping: false });
-      io.to(conversationId).emit('message:new', botMessage);
-    }, 1000); // Delay một chút cho thật
-
-  } catch (error) {
-    console.error('Lỗi Bot trả lời:', error);
-  }
+    }
 }
 
-export default webSocketService;
+export default new SocketService();
