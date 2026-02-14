@@ -1,11 +1,24 @@
-@use "variables" as *;
+// ============================================
+// Entry Point — Import All Partials
+// ============================================
+// Thứ tự: variables → reset → utilities → components → page-specific
+
+// 1. Design tokens + CSS custom properties
+@use "variables";
+
+// 2. CSS Reset + Normalize
+@use "reset";
+
+// 3. Utility classes (display, flex, spacing, text...)
+@use "utilities";
+
+// 4. Component styles
+@use "buttons";
+@use "forms";
+@use "modal";
+@use "dropdown";
+@use "components";
+
+// 5. Page-specific styles
 @use "auth";
 @use "chat";
-
-// Global styles
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-    color: $text-color;
-}

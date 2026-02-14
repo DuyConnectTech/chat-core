@@ -1,0 +1,69 @@
+@use "variables" as *;
+
+// ============================================
+// Dropdown Menu
+// ============================================
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0; // default: dropdown-menu-end behavior
+  z-index: $zindex-dropdown;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  background-color: var(--color-white);
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  list-style: none;
+
+  // Animation
+  opacity: 0;
+  transform: translateY(-5px) scale(0.98);
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+
+  &.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Alignment variant
+.dropdown-menu-end {
+  right: 0;
+  left: auto;
+}
+
+// --- Dropdown Item ---
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 0;
+  background: none;
+  font-size: $font-size-sm;
+  color: var(--text-color);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: var(--color-light);
+  }
+
+  // Color variants
+  &.text-danger {
+    color: var(--color-danger);
+  }
+}

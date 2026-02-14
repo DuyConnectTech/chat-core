@@ -1,0 +1,119 @@
+@use "sass:map";
+@use "variables" as *;
+
+// ============================================
+// Button System — Generated from Theme Colors
+// ============================================
+
+// --- Base Button ---
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: inherit;
+  font-size: $font-size-base;
+  font-weight: map.get($font-weights, "semibold");
+  line-height: $line-height-base;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  transition: var(--transition);
+  white-space: nowrap;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &:disabled,
+  &.disabled {
+    opacity: 0.65;
+    pointer-events: none;
+  }
+}
+
+// --- Solid Variants ---
+// Generates: .btn-primary, .btn-success, .btn-danger, etc.
+@each $name, $color in $theme-colors {
+  .btn-#{$name} {
+    background-color: var(--color-#{$name});
+    border-color: var(--color-#{$name});
+
+    // Chọn text color tương phản
+    @if $name == "light" or $name == "warning" {
+      color: $color-dark;
+    } @else {
+      color: $color-white;
+    }
+
+    &:hover {
+      filter: brightness(0.9);
+      opacity: 1;
+    }
+  }
+}
+
+// --- Outline Variants ---
+// Generates: .btn-outline-primary, .btn-outline-danger, etc.
+@each $name, $color in $theme-colors {
+  .btn-outline-#{$name} {
+    background-color: transparent;
+    border-color: var(--color-#{$name});
+    color: var(--color-#{$name});
+
+    &:hover {
+      background-color: var(--color-#{$name});
+      @if $name == "light" or $name == "warning" {
+        color: $color-dark;
+      } @else {
+        color: $color-white;
+      }
+    }
+  }
+}
+
+// --- Size Variants ---
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: $font-size-sm;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: $font-size-lg;
+  border-radius: var(--radius-lg);
+}
+
+// --- Close Button ---
+.btn-close {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0.25rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  opacity: 0.5;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+
+  // X icon via pseudo-element
+  &::before {
+    content: "×";
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: currentColor;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}

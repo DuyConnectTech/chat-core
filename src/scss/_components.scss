@@ -1,0 +1,154 @@
+@use "sass:map";
+@use "variables" as *;
+
+// ============================================
+// Components — Container, Grid, Card, List Group
+// ============================================
+
+// --- Container ---
+.container {
+  width: 100%;
+  max-width: $container-max-width;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.container-fluid {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+// --- Grid System ---
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+
+  > * {
+    flex-shrink: 0;
+    width: 100%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+// Base columns: col-1 ~ col-12
+$columns: (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+
+@each $col in $columns {
+  .col-#{$col} {
+    flex: 0 0 auto;
+    width: calc(#{$col} / 12 * 100%);
+  }
+}
+
+.col { flex: 1 0 0%; }
+
+// Responsive columns: col-sm-6, col-md-4, col-lg-3, etc.
+@each $bp, $min-width in $breakpoints {
+  @media (min-width: $min-width) {
+    @each $col in $columns {
+      .col-#{$bp}-#{$col} {
+        flex: 0 0 auto;
+        width: calc(#{$col} / 12 * 100%);
+      }
+    }
+    .col-#{$bp} { flex: 1 0 0%; }
+    .col-#{$bp}-auto { flex: 0 0 auto; width: auto; }
+  }
+}
+
+// Offset
+@each $col in $columns {
+  .offset-#{$col} {
+    margin-left: calc(#{$col} / 12 * 100%);
+  }
+}
+
+@each $bp, $min-width in $breakpoints {
+  @media (min-width: $min-width) {
+    @each $col in $columns {
+      .offset-#{$bp}-#{$col} {
+        margin-left: calc(#{$col} / 12 * 100%);
+      }
+    }
+    .offset-#{$bp}-0 { margin-left: 0; }
+  }
+}
+
+// Order
+@for $i from 0 through 5 {
+  .order-#{$i} { order: $i; }
+}
+.order-first { order: -1; }
+.order-last  { order: 9999; }
+
+// --- Card ---
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  word-wrap: break-word;
+
+  .card-body {
+    flex: 1 1 auto;
+    padding: 1.25rem;
+  }
+}
+
+// --- List Group ---
+.list-group {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+.list-group-flush {
+  border-radius: 0;
+  
+  > .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+
+    &:first-child { border-top: 0; }
+    &:last-child { border-bottom: 0; }
+  }
+}
+
+.list-group-item {
+  position: relative;
+  display: block;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--color-white);
+  border: 1px solid $border-subtle;
+  text-decoration: none;
+  color: inherit;
+
+  &:first-child { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+  &:last-child { border-bottom-left-radius: inherit; border-bottom-right-radius: inherit; }
+}
+
+.list-group-item-action {
+  width: 100%;
+  text-align: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border: none;
+  background: none;
+
+  &:hover {
+    background-color: var(--color-light);
+  }
+}

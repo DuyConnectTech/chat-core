@@ -1,4 +1,6 @@
 import { renderMarkdown, hasMarkdown } from './markdown.js';
+import './modal.js';
+import './dropdown.js';
 
 // Lấy thông tin user từ HTML
 const userInfo = document.getElementById('user-info');

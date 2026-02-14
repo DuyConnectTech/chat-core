@@ -1,14 +1,173 @@
-// Colors
-$primary-color: #0084ff;
-$bg-color: #f0f2f5;
-$text-color: #1c1e21;
-$muted-color: #65676b;
-$border-color: #ddd;
-$white: #fff;
-$msg-left-bg: #e4e6eb;
-$msg-right-bg: #0084ff;
-$online-color: #31a24c;
+// ============================================
+// Design Tokens — :root CSS Custom Properties + Sass Maps
+// ============================================
 
-// Layout
+// --- Color Palette ---
+$color-primary:   #0084ff;
+$color-success:   #28a745;
+$color-danger:    #dc3545;
+$color-warning:   #ffc107;
+$color-secondary: #6c757d;
+$color-light:     #f8f9fa;
+$color-dark:      #212529;
+$color-white:     #fff;
+$color-muted:     #65676b;
+$color-black:     #000;
+
+$bg-color:        #f0f2f5;
+$text-color:      #1c1e21;
+$border-color:    #ddd;
+$msg-left-bg:     #e4e6eb;
+$msg-right-bg:    $color-primary;
+$online-color:    #31a24c;
+
+// --- Semantic UI Colors ---
+$hover-bg:          #f5f5f5;           // hover state backgrounds
+$surface-bg:        $color-white;      // main surface/card background
+$input-bg:          $bg-color;         // input/form backgrounds
+$action-btn-bg:     #eee;             // action button default
+$action-btn-hover:  #ddd;             // action button hover
+$action-btn-color:  #666;             // action button text
+
+// Chat-specific
+$msg-bubble-left-bg:   #f0f0f0;
+$msg-system-bg:        $color-light;
+$msg-system-color:     #777;
+
+// Code block theme
+$code-block-bg:     #1e1e1e;
+$code-block-color:  #d4d4d4;
+$code-copy-color:   #aaa;
+$code-copy-success: #4caf50;
+
+// User badge
+$badge-gradient-start: #6e8efb;
+$badge-gradient-end:   #a777e3;
+
+// Border opacity helpers
+$border-subtle:     rgba($color-black, 0.08);
+$border-light:      rgba($color-black, 0.15);
+$backdrop-bg:       rgba($color-black, 0.5);
+$overlay-light:     rgba($color-white, 0.9);
+$overlay-white-15:  rgba($color-white, 0.15);
+$overlay-white-25:  rgba($color-white, 0.25);
+$scrollbar-color:   rgba($color-black, 0.1);
+$blockquote-border: rgba($color-black, 0.2);
+$table-header-bg:   rgba($color-black, 0.05);
+
+// Color map — dùng cho @each loops generate classes
+$theme-colors: (
+  "primary":   $color-primary,
+  "success":   $color-success,
+  "danger":    $color-danger,
+  "warning":   $color-warning,
+  "secondary": $color-secondary,
+  "light":     $color-light,
+  "dark":      $color-dark,
+  "muted":     $color-muted,
+);
+
+// --- Spacing Scale ---
+$spacer: 1rem;
+$spacers: (
+  0: 0,
+  1: $spacer * 0.25,   // 4px
+  2: $spacer * 0.5,    // 8px
+  3: $spacer,          // 16px
+  4: $spacer * 1.5,    // 24px
+  5: $spacer * 3,      // 48px
+);
+
+// --- Typography ---
+$font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+$font-size-base: 1rem;
+$font-size-sm: 0.875rem;
+$font-size-lg: 1.25rem;
+$line-height-base: 1.5;
+
+$font-weights: (
+  "normal":   400,
+  "semibold": 600,
+  "bold":     700,
+);
+
+// --- Border Radius ---
+$border-radius:    0.375rem;
+$border-radius-sm: 0.25rem;
+$border-radius-lg: 0.5rem;
+$border-radius-xl: 1rem;
+$border-radius-pill: 50rem;
+$border-radius-circle: 50%;
+
+// --- Shadows ---
+$shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.075);
+$shadow:     0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+$shadow-lg:  0 1rem 3rem rgba(0, 0, 0, 0.175);
+
+// --- Transitions ---
+$transition-base: all 0.2s ease-in-out;
+$transition-fade: opacity 0.15s linear;
+
+// --- Breakpoints ---
+$breakpoints: (
+  sm:  576px,
+  md:  768px,
+  lg:  992px,
+  xl:  1200px,
+  xxl: 1400px,
+);
+
+// --- Layout ---
 $sidebar-width: 350px;
 $header-height: 60px;
+$container-max-width: 1200px;
+
+// --- Z-Index ---
+$zindex-dropdown:  1000;
+$zindex-modal:     1050;
+$zindex-backdrop:  1040;
+
+// ============================================
+// :root — CSS Custom Properties (runtime access)
+// ============================================
+:root {
+  // Colors
+  @each $name, $value in $theme-colors {
+    --color-#{$name}: #{$value};
+  }
+  --color-white: #{$color-white};
+  --color-black: #{$color-black};
+  --bg-color: #{$bg-color};
+  --text-color: #{$text-color};
+  --border-color: #{$border-color};
+
+  // Semantic
+  --hover-bg: #{$hover-bg};
+  --surface-bg: #{$surface-bg};
+  --input-bg: #{$input-bg};
+  --border-subtle: #{$border-subtle};
+  --backdrop-bg: #{$backdrop-bg};
+
+  // Spacing
+  @each $key, $value in $spacers {
+    --spacer-#{$key}: #{$value};
+  }
+
+  // Typography
+  --font-family: #{$font-family-base};
+  --font-size: #{$font-size-base};
+  --line-height: #{$line-height-base};
+
+  // Shadows
+  --shadow-sm: #{$shadow-sm};
+  --shadow: #{$shadow};
+  --shadow-lg: #{$shadow-lg};
+
+  // Radius
+  --radius: #{$border-radius};
+  --radius-sm: #{$border-radius-sm};
+  --radius-lg: #{$border-radius-lg};
+
+  // Transition
+  --transition: #{$transition-base};
+}
