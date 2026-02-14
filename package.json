@@ -4,6 +4,14 @@
   "description": "A core chat application for interns using Node.js, Sequelize, and Socket.io",
   "main": "server.js",
   "type": "module",
+  "imports": {
+    "#config/*":      "./config/*",
+    "#utils/*":       "./utils/*",
+    "#services/*":    "./services/*",
+    "#middlewares/*": "./middlewares/*",
+    "#models/*":      "./models/*",
+    "#controllers/*": "./controllers/*"
+  },
   "scripts": {
     "dev": "npm-run-all --parallel dev:*",
     "dev:sass": "sass --watch src/scss:public/css",

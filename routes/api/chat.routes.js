@@ -1,8 +1,8 @@
 import express from 'express';
-import chatController from '../controllers/chat.controller.js';
-import authenticate from '../middlewares/authenticate.js';
-import featureGuard from '../middlewares/featureGuard.js';
-import upload from '../utils/upload.js';
+import chatController from '#controllers/chat.controller.js';
+import authenticate from '#middlewares/authenticate.js';
+import featureGuard from '#middlewares/featureGuard.js';
+import upload from '#utils/upload.js';
 
 const router = express.Router();
 

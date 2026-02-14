@@ -1,6 +1,6 @@
 import express from 'express';
-import authController from '../controllers/auth.controller.js';
-import featureGuard from '../middlewares/featureGuard.js';
+import authController from '#controllers/auth.controller.js';
+import featureGuard from '#middlewares/featureGuard.js';
 
 const router = express.Router();
 

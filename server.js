@@ -5,13 +5,11 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 
-import { PUBLIC_DIR, VIEWS_DIR } from "./utils/path.js";
-import { sequelize } from "./models/index.js";
-import socketService from "./services/socket.service.js";
-import featureService from "./services/feature.service.js";
-import viewRoutes from "./routes/view.routes.js";
-import authRoutes from "./routes/auth.routes.js";
-import chatRoutes from "./routes/chat.routes.js";
+import { PUBLIC_DIR, VIEWS_DIR } from "#utils/path.js";
+import { sequelize } from "#models/index.js";
+import socketService from "#services/socket.service.js";
+import featureService from "#services/feature.service.js";
+import { loadRoutes } from "./routes/index.js";
 
 dotenv.config();
 
@@ -32,10 +30,8 @@ app.use(express.static(PUBLIC_DIR));
 app.set("view engine", "ejs");
 app.set("views", VIEWS_DIR);
 
-// --- Routes ---
-app.use("/", viewRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api", chatRoutes); // Chứa đầy đủ các API Chat
+// --- Routes (Dynamic Loading) ---
+await loadRoutes(app);
 
 // --- Database & Socket ---
 socketService.init(server);

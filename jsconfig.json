@@ -2,7 +2,14 @@
     "compilerOptions": {
         "baseUrl": "./",
         "paths": {
-            "@/*": ["*"]
+            "#config/*":      ["./config/*"],
+            "#utils/*":       ["./utils/*"],
+            "#services/*":    ["./services/*"],
+            "#middlewares/*": ["./middlewares/*"],
+            "#models/*":      ["./models/*"],
+            "#controllers/*": ["./controllers/*"]
         }
-    }
+    },
+    "include": ["**/*.js"],
+    "exclude": ["node_modules", "public"]
 }

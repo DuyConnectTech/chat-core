@@ -123,7 +123,7 @@ async function loadMessages(conversationId, beforeId = null) {
     isLoadingMore = true;
 
     try {
-        const url = `/api/conversations/${conversationId}/messages?limit=20${beforeId ? `&beforeId=${beforeId}` : ''}`;
+        const url = `/api/chat/conversations/${conversationId}/messages?limit=20${beforeId ? `&beforeId=${beforeId}` : ''}`;
         const response = await fetch(url);
         const messages = await response.json();
         
@@ -195,7 +195,7 @@ if (botToggleBtn) {
     botToggleBtn.addEventListener('click', async () => {
         const currentActive = botToggleBtn.dataset.active === 'true';
         const newActive = !currentActive;
-        const res = await fetch(`/api/conversations/${activeConversationId}/bot`, {
+        const res = await fetch(`/api/chat/conversations/${activeConversationId}/bot`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ active: newActive })
         });
@@ -215,7 +215,7 @@ if (botToggleBtn) {
 if (leaveGroupBtn) {
     leaveGroupBtn.addEventListener('click', async () => {
         if (!confirm('Bạn muốn rời nhóm?')) return;
-        await fetch(`/api/conversations/${activeConversationId}/leave`, { method: 'POST' });
+        await fetch(`/api/chat/conversations/${activeConversationId}/leave`, { method: 'POST' });
         window.location.reload();
     });
 }
@@ -223,7 +223,7 @@ if (leaveGroupBtn) {
 if (deleteGroupBtn) {
     deleteGroupBtn.addEventListener('click', async () => {
         if (!confirm('Giải tán nhóm?')) return;
-        await fetch(`/api/conversations/${activeConversationId}`, { method: 'DELETE' });
+        await fetch(`/api/chat/conversations/${activeConversationId}`, { method: 'DELETE' });
         window.location.reload();
     });
 }
@@ -231,7 +231,7 @@ if (deleteGroupBtn) {
 // --- Recall / Delete ---
 window.recallMessage = async function(messageId) {
     if (!confirm('Bạn có chắc muốn thu hồi tin nhắn này?')) return;
-    const res = await fetch(`/api/messages/${messageId}/recall`, { method: 'DELETE' });
+    const res = await fetch(`/api/chat/messages/${messageId}/recall`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success && socket) socket.emit('message:recall', { conversationId: activeConversationId, messageId });
     else alert(data.error || 'Lỗi thu hồi');
@@ -239,7 +239,7 @@ window.recallMessage = async function(messageId) {
 
 window.deleteMessageForMe = async function(messageId) {
     if (!confirm('Xóa tin nhắn này phía bạn?')) return;
-    await fetch(`/api/messages/${messageId}/me`, { method: 'DELETE' });
+    await fetch(`/api/chat/messages/${messageId}/me`, { method: 'DELETE' });
     const el = document.querySelector(`[data-msg-id="${messageId}"]`);
     if (el) el.remove();
 }
@@ -284,7 +284,7 @@ if (uploadBtn) {
         formData.append('file', file);
         uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         try {
-            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
             const data = await res.json();
             if(socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'image' });
         } catch(err) { alert('Lỗi upload'); }
@@ -313,7 +313,7 @@ async function startRecording() {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             const formData = new FormData();
             formData.append('file', audioBlob, 'recording.webm');
-            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
             const data = await res.json();
             if(socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'audio' });
         };
@@ -344,7 +344,7 @@ if (aiSuggestBtn) {
         if (!activeConversationId) return;
         aiSuggestBtn.disabled = true;
         aiSuggestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        const response = await fetch(`/api/conversations/${activeConversationId}/suggest`);
+        const response = await fetch(`/api/chat/conversations/${activeConversationId}/suggest`);
         const data = await response.json();
         if (data.suggestion) { msgInput.value = data.suggestion; msgInput.focus(); }
         aiSuggestBtn.disabled = false; aiSuggestBtn.innerHTML = '<i class="fas fa-magic"></i>';
@@ -354,7 +354,7 @@ if (aiSuggestBtn) {
 // --- New Chat/Group Init ---
 document.querySelectorAll('.start-chat-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-        await fetch('/api/conversations/private', {
+        await fetch('/api/chat/conversations/private', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ targetUserId: btn.dataset.userId })
         });
@@ -369,7 +369,7 @@ if (createGroupForm) {
         const title = document.getElementById('group-title').value;
         const memberIds = Array.from(document.querySelectorAll('.member-checkbox:checked')).map(cb => cb.value);
         if (memberIds.length === 0) return alert('Chọn thành viên');
-        await fetch('/api/conversations/group', {
+        await fetch('/api/chat/conversations/group', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, memberIds })
         });
