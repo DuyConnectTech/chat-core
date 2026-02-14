@@ -79,7 +79,7 @@ Tài liệu này phác thảo lộ trình nâng cấp toàn diện cho dự án 
 
 ### Giai đoạn 5: Tối ưu hóa & Hiệu năng
 - [x] **Lazy Loading:** Chỉ tải 20 tin nhắn đầu, cuộn lên tải tiếp.
-- [ ] **Image Optimization:** Dùng thư viện `sharp` để resize ảnh trước khi lưu.
+- [x] **Image Optimization:** Dùng thư viện `sharp` để resize ảnh trước khi lưu.
 - [ ] **Redis Adapter:** Cấu hình Socket.io dùng Redis (chuẩn bị cho Scale nhiều server).
 
 ### Giai đoạn 6: Testing (Quality Assurance)

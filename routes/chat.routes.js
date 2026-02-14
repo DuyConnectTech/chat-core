@@ -23,9 +23,6 @@ router.delete('/messages/:id/recall', chatController.recallMessage);
 router.delete('/messages/:id/me', chatController.deleteMessageForMe);
 
 // --- Multimedia ---
-router.post('/upload', upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'Không có file' });
-  res.json({ url: `/uploads/${req.file.fieldname}s/${req.file.filename}` });
-});
+router.post('/upload', upload.single('file'), chatController.uploadFile);
 
 export default router;

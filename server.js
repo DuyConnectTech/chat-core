@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 
-import { PUBLIC_DIR, VIEWS_DIR } from "../utils/path.js";
+import { PUBLIC_DIR, VIEWS_DIR } from "./utils/path.js";
 import { sequelize } from "./models/index.js";
 import socketService from "./services/socket.service.js";
 import viewRoutes from "./routes/view.routes.js";

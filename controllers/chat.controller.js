@@ -3,8 +3,61 @@ import { User, Conversation } from '../models/index.js';
 import { Op } from 'sequelize';
 import asyncHandler from '../utils/async-handler.js';
 import geminiService from '../services/gemini.service.js';
+import sharp from 'sharp';
+import fs from 'fs/promises';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { ROOT_DIR } from '../utils/path.js';
 
 class ChatController {
+  /**
+   * API xử lý upload file với logic phân loại folder và tối ưu hóa
+   */
+  uploadFile = asyncHandler(async (req, res) => {
+    if (!req.file) {
+      throw new Error('Không có file nào được tải lên');
+    }
+
+    const { mimetype, originalname, buffer } = req.file;
+    const ext = path.extname(originalname).toLowerCase();
+    
+    // Khôi phục logic phân loại folder của bro
+    let folder = 'others';
+    const isImage = mimetype.startsWith('image/');
+    const isAudio = mimetype.startsWith('audio/') || originalname.endsWith('.webm') || originalname.endsWith('.mp3');
+
+    if (isImage) {
+      folder = 'images';
+    } else if (isAudio) {
+      folder = 'audio';
+    }
+
+    // Tên file mới (UUID)
+    const filename = `${uuidv4()}${isImage ? '.webp' : ext}`;
+    const uploadPath = path.join(ROOT_DIR, 'public', 'uploads', folder, filename);
+
+    // Đảm bảo thư mục tồn tại
+    await fs.mkdir(path.dirname(uploadPath), { recursive: true });
+
+    if (isImage) {
+      // Tối ưu hóa ảnh sang WebP
+      await sharp(buffer)
+        .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toFile(uploadPath);
+    } else {
+      // Lưu file khác (audio, others) nguyên bản
+      await fs.writeFile(uploadPath, buffer);
+    }
+
+    res.json({
+      success: true,
+      url: `/uploads/${folder}/${filename}`,
+      mimetype: isImage ? 'image/webp' : mimetype,
+      filename: filename
+    });
+  });
+
   /**
    * Render trang chat chính
    * @method GET /chat

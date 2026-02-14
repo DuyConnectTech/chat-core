@@ -1,31 +1,15 @@
 import multer from 'multer';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { ROOT_DIR } from './path.js';
 
-// Cấu hình nơi lưu trữ
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let folder = 'public/uploads/';
-    if (file.mimetype.startsWith('image/')) {
-      folder += 'images';
-    } else if (file.mimetype.startsWith('audio/') || file.originalname.endsWith('.webm') || file.originalname.endsWith('.mp3')) {
-      folder += 'audio';
-    } else {
-      folder += 'others';
-    }
-    cb(null, path.join(ROOT_DIR, folder));
-  },
-  filename: (req, file, cb) => {
-    // Giữ nguyên extension, đặt tên bằng UUID để tránh trùng lặp
-    const ext = path.extname(file.originalname);
-    cb(null, `${uuidv4()}${ext}`);
-  }
-});
-
-// Bộ lọc file
+/**
+ * Bộ lọc file: Giữ nguyên logic bảo mật của bro
+ */
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/wav'];
+  const allowedTypes = [
+    'image/jpeg', 'image/png', 'image/gif', 
+    'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/wav'
+  ];
+  
+  // Khôi phục logic check mimetype và startWith audio/
   if (allowedTypes.includes(file.mimetype) || file.mimetype.startsWith('audio/')) {
     cb(null, true);
   } else {
@@ -33,11 +17,16 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({
+/**
+ * Sử dụng Memory Storage để có buffer xử lý bằng Sharp
+ */
+const storage = multer.memoryStorage();
+
+const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // Giới hạn 10MB
+    fileSize: 10 * 1024 * 1024 // 10MB
   }
 });
 
