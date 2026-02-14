@@ -1,3 +1,5 @@
+import { renderMarkdown, hasMarkdown } from './markdown.js';
+
 // Lấy thông tin user từ HTML
 const userInfo = document.getElementById('user-info');
 const currentUserId = userInfo ? userInfo.dataset.id : null;
@@ -80,7 +82,12 @@ function appendMessage(msg, prepend = false) {
         } else if (msg.type === 'audio') {
             contentHtml = `<audio controls class="mt-2" src="${msg.content}"></audio>`;
         } else {
-            contentHtml = `<span>${msg.content}</span>`;
+            // Nếu text có chứa markdown syntax → parse, không thì render plain
+            if (hasMarkdown(msg.content)) {
+                contentHtml = `<div class="msg-markdown">${renderMarkdown(msg.content)}</div>`;
+            } else {
+                contentHtml = `<span>${msg.content}</span>`;
+            }
         }
     }
 
