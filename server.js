@@ -8,6 +8,7 @@ import helmet from "helmet";
 import { PUBLIC_DIR, VIEWS_DIR } from "./utils/path.js";
 import { sequelize } from "./models/index.js";
 import socketService from "./services/socket.service.js";
+import featureService from "./services/feature.service.js";
 import viewRoutes from "./routes/view.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
@@ -43,8 +44,19 @@ const PORT = process.env.PORT || 3000;
 
 sequelize
     .sync({ alter: true })
-    .then(() => {
+    .catch((err) => {
+        // Fallback: nếu alter thất bại (ER_TOO_MANY_KEYS, duplicate index...)
+        // → chỉ sync cấu trúc cơ bản, không alter
+        console.warn("⚠️  sync({ alter: true }) failed, falling back to basic sync:", err.message);
+        return sequelize.sync();
+    })
+    .then(async () => {
         console.log("Database connected & synced");
+
+        // Seed & Load feature flags
+        await featureService.seedDefaults();
+        await featureService.loadFeatures();
+
         server.listen(PORT, () => {
             console.log(`Server is running on http://localhost:${PORT}`);
         });

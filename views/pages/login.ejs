@@ -23,9 +23,11 @@
                 <input type="password" id="password" class="form-control" required placeholder="********">
             </div>
             <button type="submit" id="submit-btn" class="btn btn-primary w-100 mb-3">Đăng nhập</button>
+            <% if (registrationEnabled) { %>
             <div class="text-center">
                 <a href="/register" class="text-decoration-none">Chưa có tài khoản? Đăng ký ngay</a>
             </div>
+            <% } %>
         </form>
     </div>
 

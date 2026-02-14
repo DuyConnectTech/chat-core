@@ -3,6 +3,7 @@ import { User, Conversation } from '../models/index.js';
 import { Op } from 'sequelize';
 import asyncHandler from '../utils/async-handler.js';
 import geminiService from '../services/gemini.service.js';
+import featureService from '../services/feature.service.js';
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
@@ -71,11 +72,17 @@ class ChatController {
       limit: 10
     });
 
+    // Lấy feature flags để truyền vào frontend
+    const features = await featureService.getAllFeatures();
+    const featureFlags = {};
+    features.forEach(f => { featureFlags[f.key] = f.enabled; });
+
     res.render('pages/chat', {
       title: 'Chat Room',
       user: req.user,
       conversations,
-      otherUsers
+      otherUsers,
+      featureFlags
     });
   });
 

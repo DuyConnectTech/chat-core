@@ -1,5 +1,6 @@
 import authService from "../services/auth.service.js";
 import asyncHandler from "../utils/async-handler.js";
+import featureService from "../services/feature.service.js";
 
 class AuthController {
     /**
@@ -24,8 +25,9 @@ class AuthController {
      * Render trang đăng nhập
      * @method GET /login
      */
-    renderLogin = (req, res) => {
-        res.render("pages/login", { title: "Đăng nhập", error: null });
+    renderLogin = async (req, res) => {
+        const registrationEnabled = await featureService.isEnabled('feature_registration');
+        res.render("pages/login", { title: "Đăng nhập", error: null, registrationEnabled });
     };
 
     /**

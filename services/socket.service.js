@@ -3,6 +3,7 @@ import chatService from "./chat.service.js";
 import userService from "./user.service.js";
 import geminiService from "./gemini.service.js";
 import tokenService from "./token.service.js";
+import featureService from "./feature.service.js";
 
 class SocketService {
     init(server) {
@@ -57,7 +58,9 @@ class SocketService {
             });
 
             // Thu hồi tin nhắn
-            socket.on("message:recall", ({ conversationId, messageId }) => {
+            socket.on("message:recall", async ({ conversationId, messageId }) => {
+                const recallEnabled = await featureService.isEnabled('feature_message_recall');
+                if (!recallEnabled) return;
                 this.io.to(conversationId).emit("message:recalled", { messageId });
             });
 
@@ -81,6 +84,10 @@ class SocketService {
      */
     async handleBotReply(conversationId, userContent) {
         try {
+            // Check global feature toggle
+            const botEnabled = await featureService.isEnabled('feature_ai_bot');
+            if (!botEnabled) return;
+
             const botUser = await userService.findOrCreateBotUser();
             const conversation = await chatService.getConversationDetail(conversationId);
 
