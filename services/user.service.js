@@ -9,7 +9,8 @@ class UserService {
     if (!bot) {
       bot = await User.create({
         username: 'ai_chatbot',
-        password_hash: 'system_protected', // Bot không đăng nhập bằng pass
+        email: 'bot@system.local',
+        password: 'system_protected_password', // Bot không đăng nhập bằng pass
         display_name: 'AI Chatbot',
         role: 'bot',
         avatar_url: '/images/bot-avatar.png'
