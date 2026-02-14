@@ -1,5 +1,6 @@
 @use "sass:map";
-@use "variables" as *;
+@use "sass:color";
+@use "../base/variables" as *;
 
 // ============================================
 // Button System — Generated from Theme Colors
@@ -38,13 +39,11 @@
 }
 
 // --- Solid Variants ---
-// Generates: .btn-primary, .btn-success, .btn-danger, etc.
 @each $name, $color in $theme-colors {
   .btn-#{$name} {
     background-color: var(--color-#{$name});
     border-color: var(--color-#{$name});
 
-    // Chọn text color tương phản
     @if $name == "light" or $name == "warning" {
       color: $color-dark;
     } @else {
@@ -59,7 +58,6 @@
 }
 
 // --- Outline Variants ---
-// Generates: .btn-outline-primary, .btn-outline-danger, etc.
 @each $name, $color in $theme-colors {
   .btn-outline-#{$name} {
     background-color: transparent;
@@ -90,6 +88,17 @@
   border-radius: var(--radius-lg);
 }
 
+// --- Icon Button ---
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius-circle;
+}
+
 // --- Close Button ---
 .btn-close {
   width: 1.5rem;
@@ -104,7 +113,6 @@
   cursor: pointer;
   transition: var(--transition);
 
-  // X icon via pseudo-element
   &::before {
     content: "×";
     display: block;

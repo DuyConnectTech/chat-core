@@ -1,0 +1,128 @@
+@use "../base/variables" as *;
+
+// ============================================
+// Markdown Content Rendering
+// Used inside chat message bubbles
+// ============================================
+.msg-markdown {
+  line-height: 1.6;
+  word-break: break-word;
+
+  // Paragraphs
+  p {
+    margin: 0 0 8px;
+    &:last-child { margin-bottom: 0; }
+  }
+
+  // Headings
+  h1, h2, h3, h4, h5, h6 {
+    margin: 12px 0 6px;
+    font-weight: 600;
+    line-height: 1.3;
+    &:first-child { margin-top: 0; }
+  }
+  h1 { font-size: 1.3rem; }
+  h2 { font-size: 1.15rem; }
+  h3 { font-size: 1.05rem; }
+
+  // Bold & Italic
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+
+  // Lists
+  ul, ol {
+    margin: 6px 0;
+    padding-left: 20px;
+    li { margin: 3px 0; }
+  }
+
+  // Inline code
+  code {
+    background: $border-subtle;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-family: 'Fira Code', 'Consolas', monospace;
+  }
+
+  // Code blocks
+  .code-block-wrapper {
+    position: relative;
+    margin: 8px 0;
+    border-radius: 8px;
+    overflow: hidden;
+
+    .code-copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: $overlay-white-15;
+      color: $code-copy-color;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.2s;
+      z-index: 2;
+
+      &:hover { background: $overlay-white-25; color: $color-white; }
+      &.copied { color: $code-copy-success; }
+    }
+
+    &:hover .code-copy-btn { opacity: 1; }
+
+    pre {
+      background: $code-block-bg;
+      margin: 0;
+      padding: 12px 16px;
+      overflow-x: auto;
+      border-radius: 8px;
+
+      code {
+        background: none;
+        padding: 0;
+        border-radius: 0;
+        color: $code-block-color;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        white-space: pre;
+      }
+    }
+  }
+
+  // Blockquote
+  blockquote {
+    border-left: 3px solid $blockquote-border;
+    margin: 8px 0;
+    padding: 4px 12px;
+    opacity: 0.85;
+  }
+
+  // Links
+  a {
+    color: inherit;
+    text-decoration: underline;
+    &:hover { opacity: 0.8; }
+  }
+
+  // Tables
+  table {
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 0.85em;
+    width: 100%;
+
+    th, td {
+      border: 1px solid $border-light;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    th { font-weight: 600; background: $table-header-bg; }
+  }
+}

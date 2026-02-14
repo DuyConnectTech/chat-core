@@ -283,12 +283,21 @@ $opacities: (0: 0, 25: 0.25, 50: 0.5, 75: 0.75, 100: 1);
 .invisible { visibility: hidden; }
 
 .small { font-size: $font-size-sm; }
+.text-xs { font-size: 0.75rem; }
+.text-muted { color: $color-muted; }
 .lead  { font-size: $font-size-lg; font-weight: 300; }
 .display-1 { font-size: 5rem; font-weight: 300; line-height: 1.2; }
 
 .img-fluid {
   max-width: 100%;
   height: auto;
+}
+
+// --- Sizing helpers ---
+.max-w-600 { max-width: 600px; }
+.scroll-list {
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 // ============================================

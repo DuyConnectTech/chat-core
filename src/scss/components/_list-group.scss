@@ -1,0 +1,51 @@
+@use "../base/variables" as *;
+
+// ============================================
+// List Group Component
+// ============================================
+.list-group {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+.list-group-flush {
+  border-radius: 0;
+
+  > .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+
+    &:first-child { border-top: 0; }
+    &:last-child { border-bottom: 0; }
+  }
+}
+
+.list-group-item {
+  position: relative;
+  display: block;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--color-white);
+  border: 1px solid $border-subtle;
+  text-decoration: none;
+  color: inherit;
+
+  &:first-child { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+  &:last-child { border-bottom-left-radius: inherit; border-bottom-right-radius: inherit; }
+}
+
+.list-group-item-action {
+  width: 100%;
+  text-align: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border: none;
+  background: none;
+
+  &:hover {
+    background-color: var(--color-light);
+  }
+}

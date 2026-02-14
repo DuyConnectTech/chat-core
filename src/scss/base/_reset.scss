@@ -108,3 +108,15 @@ pre {
   overflow: auto;
   font-size: 0.875em;
 }
+
+// --- Custom Scrollbar ---
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}

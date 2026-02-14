@@ -1,27 +1,28 @@
 @use "sass:map";
-@use "variables" as *;
+@use "../base/variables" as *;
 
 // ============================================
-// Modal — Custom replacement for Bootstrap Modal
+// Modal System — Custom replacement
 // ============================================
-
 .modal {
-  display: none;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: $zindex-modal;
+  display: none;
   overflow-x: hidden;
   overflow-y: auto;
   outline: 0;
 
-  // Active state
   &.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
+
+    .modal-dialog {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
@@ -48,19 +49,9 @@
   width: auto;
   max-width: 500px;
   margin: 1.75rem auto;
-  z-index: $zindex-modal + 1;
-  pointer-events: none;
-
-  // Animation
-  transform: translateY(-30px);
   opacity: 0;
-  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
-
-  .modal.show & {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
+  transform: translateY(-20px);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 
 // --- Content ---
@@ -70,7 +61,6 @@
   flex-direction: column;
   width: 100%;
   background-color: var(--color-white);
-  border: 0;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   outline: 0;
@@ -82,22 +72,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
 }
 
 .modal-title {
   margin: 0;
   font-size: 1.15rem;
-  font-weight: map.get($font-weights, "bold");
-  line-height: $line-height-base;
+  font-weight: map.get($font-weights, "semibold");
 }
 
 // --- Body ---
 .modal-body {
   position: relative;
   flex: 1 1 auto;
-  padding: 1.25rem;
+  padding: 1.5rem;
 }
 
 // --- Footer ---
@@ -106,6 +95,6 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-color);
 }

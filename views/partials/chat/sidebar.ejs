@@ -1,0 +1,47 @@
+<%# Chat Sidebar — Conversation List %>
+<aside class="chat-sidebar">
+    <div class="p-3">
+        <div class="row g-2 mb-3">
+            <% if (featureFlags.feature_private_chat) { %>
+            <div class="<%= featureFlags.feature_group_chat ? 'col-6' : 'col-12' %>">
+                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#newChatModal">
+                    <i class="fas fa-user-plus me-2"></i>Chat 1-1
+                </button>
+            </div>
+            <% } %>
+            <% if (featureFlags.feature_group_chat) { %>
+            <div class="<%= featureFlags.feature_private_chat ? 'col-6' : 'col-12' %>">
+                <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#newGroupModal">
+                    <i class="fas fa-users me-2"></i>Tạo nhóm
+                </button>
+            </div>
+            <% } %>
+        </div>
+        <input type="text" class="form-control" placeholder="Tìm kiếm cuộc trò chuyện...">
+    </div>
+    <div class="flex-grow-1 overflow-auto" id="conversation-list">
+        <% conversations.forEach(conv=> { %>
+            <div class="conv-item d-flex align-items-center p-3" data-id="<%= conv.id %>" data-type="<%= conv.type %>" data-owner="<%= conv.owner_id %>"
+                data-bot="<%= conv.is_bot_active %>">
+                <div class="position-relative me-3">
+                    <div class="user-badge">
+                        <%= conv.type==='private' ? (conv.Users[0]?.display_name[0] || 'U' ) : 'G' %>
+                    </div>
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-0 text-truncate">
+                            <%= conv.type==='private' ? (conv.Users[0]?.display_name || 'Người dùng' ) : (conv.title || 'Nhóm chat' ) %>
+                        </h6>
+                        <small class="text-muted">
+                            <%= conv.lastMessage ? new Date(conv.lastMessage.created_at).toLocaleTimeString([], {hour: '2-digit' , minute:'2-digit'}) : '' %>
+                        </small>
+                    </div>
+                    <div class="text-truncate small text-muted">
+                        <%= conv.lastMessage ? `${conv.lastMessage.sender.display_name}: ${conv.lastMessage.content}` : 'Bắt đầu trò chuyện...' %>
+                    </div>
+                </div>
+            </div>
+            <% }) %>
+    </div>
+</aside>

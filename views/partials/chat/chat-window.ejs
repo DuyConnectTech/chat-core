@@ -1,0 +1,70 @@
+<%# Chat Window — Messages + Input %>
+<section class="chat-content">
+    <div id="no-chat-selected" class="h-100 d-flex flex-column justify-content-center align-items-center text-muted">
+        <i class="fab fa-facebook-messenger fa-4x mb-3 opacity-25"></i>
+        <h5>Chọn một cuộc trò chuyện để bắt đầu</h5>
+    </div>
+
+    <div id="chat-window" class="d-none h-100 flex-column">
+        <%# Content Header %>
+        <div class="chat-content-header shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="user-badge me-3 shadow-sm" id="active-chat-avatar"></div>
+                <div>
+                    <h6 class="mb-0 fw-bold" id="active-chat-title"></h6>
+                    <small class="text-muted text-xs">Đang hoạt động</small>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-light btn-icon" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v text-muted"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                    <% if (featureFlags.feature_group_chat) { %>
+                    <li><button class="dropdown-item text-danger py-2 d-none" id="leave-group-btn"><i class="fas fa-sign-out-alt me-2 w-20"></i>Rời
+                            nhóm</button></li>
+                    <li><button class="dropdown-item text-danger py-2 d-none" id="delete-group-btn"><i class="fas fa-trash-alt me-2 w-20"></i>Giải tán
+                            nhóm</button></li>
+                    <% } %>
+                    <% if (featureFlags.feature_ai_bot) { %>
+                    <li><button class="dropdown-item py-2 d-none" id="bot-toggle-btn"><i class="fas fa-robot me-2 w-20"></i>Cài đặt AI</button></li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+
+        <%# Messages List %>
+        <div class="messages-list" id="messages-list">
+            <%# Messages will be loaded here via JS %>
+        </div>
+
+        <%# Input Area %>
+        <div class="message-input">
+            <div id="recording-status" class="text-danger small mb-2 d-none ps-2">
+                <i class="fas fa-circle fa-pulse me-2"></i> Đang ghi âm... <span id="recording-time" class="fw-bold">00:00</span>
+            </div>
+            <form id="chat-form">
+                <% if (featureFlags.feature_multimedia) { %>
+                <button type="button" id="upload-btn" title="Gửi ảnh">
+                    <i class="fas fa-image"></i>
+                </button>
+                <button type="button" id="record-btn" title="Ghi âm">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <% } %>
+                <% if (featureFlags.feature_ai_suggest) { %>
+                <button type="button" id="ai-suggest-btn" title="AI Gợi ý">
+                    <i class="fas fa-magic"></i>
+                </button>
+                <% } %>
+                <% if (featureFlags.feature_multimedia) { %>
+                <input type="file" id="file-input" class="d-none" accept="image/*">
+                <% } %>
+                <input type="text" id="msg-input" class="flex-grow-1 mx-2" placeholder="Nhập tin nhắn..." autocomplete="off">
+                <button type="submit" class="text-primary" title="Gửi">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</section>

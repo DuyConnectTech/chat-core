@@ -1,0 +1,63 @@
+<%# Modal — New 1-1 Chat %>
+<div class="modal fade" id="newChatModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bắt đầu chat mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="list-group list-group-flush">
+                    <% otherUsers.forEach(u=> { %>
+                        <button class="list-group-item list-group-item-action d-flex align-items-center p-3 start-chat-btn" data-user-id="<%= u.id %>">
+                            <div class="user-badge me-3">
+                                <%= u.display_name[0] %>
+                            </div>
+                            <div>
+                                <%= u.display_name %>
+                            </div>
+                        </button>
+                        <% }) %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%# Modal — Create Group Chat %>
+<div class="modal fade" id="newGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="create-group-form">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tạo nhóm chat mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên nhóm</label>
+                        <input type="text" id="group-title" class="form-control" required placeholder="Nhập tên nhóm...">
+                    </div>
+                    <h6>Chọn thành viên</h6>
+                    <div class="list-group list-group-flush scroll-list">
+                        <% otherUsers.forEach(u=> { %>
+                            <label class="list-group-item d-flex align-items-center p-3 cursor-pointer">
+                                <input class="form-check-input me-3 member-checkbox" type="checkbox" value="<%= u.id %>">
+                                <div class="user-badge me-3">
+                                    <%= u.display_name[0] %>
+                                </div>
+                                <div>
+                                    <%= u.display_name %>
+                                </div>
+                            </label>
+                            <% }) %>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">Tạo nhóm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

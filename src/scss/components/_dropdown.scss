@@ -1,33 +1,29 @@
-@use "variables" as *;
+@use "../base/variables" as *;
 
 // ============================================
-// Dropdown Menu
+// Dropdown — Custom replacement
 // ============================================
-
 .dropdown {
   position: relative;
   display: inline-block;
 }
 
 .dropdown-menu {
-  display: none;
   position: absolute;
   top: 100%;
-  right: 0; // default: dropdown-menu-end behavior
+  right: 0;
   z-index: $zindex-dropdown;
+  display: none;
   min-width: 10rem;
   padding: 0.5rem 0;
   margin: 0.125rem 0 0;
   background-color: var(--color-white);
-  border: 0;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
   list-style: none;
-
-  // Animation
   opacity: 0;
   transform: translateY(-5px) scale(0.98);
-  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 
   &.show {
     display: block;
@@ -36,34 +32,43 @@
   }
 }
 
-// Alignment variant
 .dropdown-menu-end {
   right: 0;
   left: auto;
 }
 
-// --- Dropdown Item ---
 .dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   width: 100%;
   padding: 0.5rem 1rem;
-  border: 0;
-  background: none;
-  font-size: $font-size-sm;
+  clear: both;
+  font-weight: 400;
   color: var(--text-color);
-  text-align: left;
+  text-align: inherit;
   text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
   cursor: pointer;
-  transition: background-color 0.15s;
+  font-size: $font-size-base;
+  font-family: inherit;
+  transition: background-color 0.1s;
 
   &:hover {
-    background-color: var(--color-light);
+    background-color: var(--hover-bg);
   }
 
-  // Color variants
-  &.text-danger {
-    color: var(--color-danger);
+  &.active {
+    background-color: var(--color-primary);
+    color: var(--color-white);
   }
+}
+
+.dropdown-divider {
+  height: 0;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  border-top: 1px solid var(--border-color);
 }
