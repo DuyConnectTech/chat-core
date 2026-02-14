@@ -4,7 +4,8 @@ import { Op } from 'sequelize';
 import asyncHandler from '../utils/async-handler.js';
 import geminiService from '../services/gemini.service.js';
 import featureService from '../services/feature.service.js';
-import sharp from 'sharp';
+import { MULTIMEDIA_CONFIG } from '../config/features.js';
+import { generateThumbnail } from '../utils/thumbnail.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,42 +22,41 @@ class ChatController {
 
     const { mimetype, originalname, buffer } = req.file;
     const ext = path.extname(originalname).toLowerCase();
-    
-    // Khôi phục logic phân loại folder của bro
-    let folder = 'others';
+    const { uploadDir } = MULTIMEDIA_CONFIG;
+
     const isImage = mimetype.startsWith('image/');
     const isAudio = mimetype.startsWith('audio/') || originalname.endsWith('.webm') || originalname.endsWith('.mp3');
 
-    if (isImage) {
-      folder = 'images';
-    } else if (isAudio) {
-      folder = 'audio';
-    }
-
     // Tên file mới (UUID)
-    const filename = `${uuidv4()}${isImage ? '.webp' : ext}`;
-    const uploadPath = path.join(ROOT_DIR, 'public', 'uploads', folder, filename);
-
-    // Đảm bảo thư mục tồn tại
-    await fs.mkdir(path.dirname(uploadPath), { recursive: true });
+    const filename = `${uuidv4()}${ext}`;
 
     if (isImage) {
-      // Tối ưu hóa ảnh sang WebP
-      await sharp(buffer)
-        .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 80 })
-        .toFile(uploadPath);
-    } else {
-      // Lưu file khác (audio, others) nguyên bản
-      await fs.writeFile(uploadPath, buffer);
-    }
+      // Dùng helper: lưu gốc + tạo thumbnail (nếu config bật)
+      const result = await generateThumbnail(buffer, filename);
 
-    res.json({
-      success: true,
-      url: `/uploads/${folder}/${filename}`,
-      mimetype: isImage ? 'image/webp' : mimetype,
-      filename: filename
-    });
+      res.json({
+        success: true,
+        url: result.thumbnailUrl || result.originalUrl,
+        originalUrl: result.originalUrl,
+        thumbnailUrl: result.thumbnailUrl,
+        mimetype,
+        filename,
+      });
+    } else {
+      // Audio / Others → lưu nguyên bản
+      const folder = isAudio ? uploadDir.audio : 'uploads/others';
+      const uploadPath = path.join(ROOT_DIR, 'public', folder, filename);
+
+      await fs.mkdir(path.dirname(uploadPath), { recursive: true });
+      await fs.writeFile(uploadPath, buffer);
+
+      res.json({
+        success: true,
+        url: `/${folder}/${filename}`,
+        mimetype,
+        filename,
+      });
+    }
   });
 
   /**

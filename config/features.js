@@ -36,3 +36,42 @@ export const CORE_FEATURES = {
 export const OPTIONAL_FEATURES = {
     // Thêm features mở rộng ở đây
 };
+
+// ─────────────────────────────────────────────────────────
+// Cấu hình chi tiết cho từng tính năng
+// ─────────────────────────────────────────────────────────
+
+/**
+ * Cấu hình Multimedia (Upload ảnh/audio)
+ */
+export const MULTIMEDIA_CONFIG = {
+    // --- Allowed File Types (MIME types) ---
+    allowedTypes: {
+        image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        audio: ['audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/wav'],
+    },
+
+    // --- Giới hạn kích thước file (bytes) ---
+    maxFileSize: {
+        image: 5 * 1024 * 1024,   // 5MB
+        audio: 10 * 1024 * 1024,  // 10MB
+    },
+
+    // --- Thumbnail / Xử lý ảnh ---
+    thumbnail: {
+        enabled: true,                 // Bật/tắt tạo thumbnail
+        maxWidth: 1200,                // Chiều rộng tối đa (px)
+        maxHeight: 1200,               // Chiều cao tối đa (px)
+        fit: 'inside',                 // 'inside' | 'cover' | 'contain' | 'fill'
+        withoutEnlargement: true,      // Không phóng to ảnh nhỏ
+        format: 'webp',                // Output format: 'webp' | 'jpeg' | 'png'
+        quality: 80,                   // Chất lượng ảnh (1-100)
+    },
+
+    // --- Thư mục upload ---
+    uploadDir: {
+        image:     'uploads/images',
+        thumbnail: 'uploads/thumbnails',
+        audio:     'uploads/audio',
+    },
+};

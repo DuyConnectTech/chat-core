@@ -1,6 +1,7 @@
 import authService from "../services/auth.service.js";
 import asyncHandler from "../utils/async-handler.js";
 import featureService from "../services/feature.service.js";
+import cookieConfig from "../config/cookie.js";
 
 class AuthController {
     /**
@@ -47,12 +48,7 @@ class AuthController {
         });
 
         // Gửi Refresh Token qua HttpOnly Cookie
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 ngày
-            sameSite: "strict",
-        });
+        res.cookie("refreshToken", refreshToken, cookieConfig.refreshToken);
 
         res.json({
             success: true,
@@ -79,12 +75,7 @@ class AuthController {
 
         const { accessToken, refreshToken } = await authService.refreshAccessToken(rawRefreshToken, ipAddress, userAgent);
 
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-            sameSite: "strict",
-        });
+        res.cookie("refreshToken", refreshToken, cookieConfig.refreshToken);
 
         res.json({ success: true, accessToken });
     });
