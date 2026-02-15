@@ -20,6 +20,14 @@ const ConversationMember = sequelize.define(
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
         },
+        last_read_message_id: {
+            type: DataTypes.UUID,
+            allowNull: true,
+        },
+        last_read_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
     },
     {
         tableName: "conversation_members",

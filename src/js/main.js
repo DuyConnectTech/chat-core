@@ -167,12 +167,17 @@ if (conversationList) {
         document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
         item.classList.add('active');
 
-        // Clear unread styles
+        // Clear unread styles & Badge
         const preview = item.querySelector('.text-truncate.small');
         if (preview) {
             preview.classList.remove('fw-bold', 'text-dark');
             preview.classList.add('text-muted');
         }
+        const badge = item.querySelector('.badge');
+        if (badge) badge.remove();
+        
+        // Mark as red via API
+        fetch(`/api/chat/conversations/${item.dataset.id}/read`, { method: 'POST' });
 
         activeConversationId = item.dataset.id;
         hasMoreMessages = true;
@@ -313,6 +318,19 @@ if (socket) {
                 if (msg.conversation_id !== activeConversationId) {
                     preview.classList.remove('text-muted');
                     preview.classList.add('fw-bold', 'text-dark');
+                    
+                    // Increment Badge
+                    let badge = item.querySelector('.badge');
+                    if (!badge) {
+                        const wrapper = item.querySelector('.d-flex.align-items-center');
+                        if (wrapper) {
+                            badge = document.createElement('span');
+                            badge.className = 'badge bg-danger rounded-pill ms-2';
+                            badge.innerText = '0';
+                            wrapper.appendChild(badge);
+                        }
+                    }
+                    if (badge) badge.innerText = parseInt(badge.innerText) + 1;
                 }
             }
 

@@ -207,6 +207,17 @@ class ChatController {
     const suggestion = await geminiService.generateReply(context, []);
     res.json({ suggestion });
   });
+
+  /**
+   * API Đánh dấu hội thoại đã đọc
+   * @method POST /api/conversations/:id/read
+   */
+  markAsRead = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    await chatService.markConversationAsRead(id, userId);
+    res.json({ success: true });
+  });
 }
 
 export default new ChatController();

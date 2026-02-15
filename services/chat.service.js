@@ -7,6 +7,24 @@ class ChatService {
    */
   async getConversations(userId) {
     return await Conversation.findAll({
+      attributes: {
+        include: [
+          [
+            sequelize.literal(`(
+              SELECT COUNT(*)
+              FROM messages AS m
+              WHERE m.conversation_id = \`Conversation\`.\`id\`
+              AND m.sender_id != '${userId}'
+              AND m.created_at > IFNULL((
+                SELECT last_read_at 
+                FROM conversation_members AS cm 
+                WHERE cm.conversation_id = \`Conversation\`.\`id\` AND cm.user_id = '${userId}'
+              ), '1970-01-01')
+            )`),
+            'unread_count'
+          ]
+        ]
+      },
       include: [
         {
           model: User,
@@ -265,6 +283,25 @@ class ChatService {
 
     await conversation.destroy(); // ON DELETE CASCADE sẽ tự xóa members và messages
     return true;
+  }
+
+  /**
+   * Đánh dấu cuộc hội thoại là đã đọc
+   */
+  async markConversationAsRead(conversationId, userId) {
+      // 1. Lấy tin nhắn cuối cùng của conversation
+      const conversation = await Conversation.findByPk(conversationId);
+      if(!conversation || !conversation.last_message_id) return;
+
+      // 2. Update ConversationMember
+      await ConversationMember.update(
+          { 
+              last_read_message_id: conversation.last_message_id,
+              last_read_at: new Date()
+          },
+          { where: { conversation_id: conversationId, user_id: userId } }
+      );
+      return true;
   }
 }
 

@@ -18,6 +18,7 @@ router.put('/conversations/:id/bot', featureGuard('feature_ai_bot'), chatControl
 router.post('/conversations/:id/leave', featureGuard('feature_group_chat'), chatController.leaveGroup);
 router.delete('/conversations/:id', featureGuard('feature_group_chat'), chatController.deleteGroup);
 router.get('/conversations/:id/suggest', featureGuard('feature_ai_suggest'), chatController.suggestReply);
+router.post('/conversations/:id/read', chatController.markAsRead);
 
 // --- Messages ---
 router.delete('/messages/:id/recall', featureGuard('feature_message_recall'), chatController.recallMessage);
