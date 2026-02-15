@@ -106,7 +106,8 @@ class ChatService {
       // 1. Tạo conversation type='group'
       const conversation = await Conversation.create({
         type: 'group',
-        title: title
+        title: title,
+        owner_id: creatorId
       }, { transaction: t });
 
       // 2. Thêm người tạo làm admin nhóm
