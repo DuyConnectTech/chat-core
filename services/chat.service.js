@@ -1,4 +1,4 @@
-import { Conversation, Message, User, ConversationMember, sequelize } from '../models/index.js';
+import { Conversation, Message, User, ConversationMember, sequelize } from '#models/index.js';
 import { Op } from 'sequelize';
 
 class ChatService {

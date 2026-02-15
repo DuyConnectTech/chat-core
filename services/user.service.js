@@ -1,4 +1,4 @@
-import { User } from '../models/index.js';
+import { User } from '#models/index.js';
 
 class UserService {
   /**

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
-import { User } from "../models/index.js";
+import { User } from "#models/index.js";
 import { Op } from "sequelize";
-import tokenService from "./token.service.js";
+import tokenService from "#services/token.service.js";
 
 class AuthService {
     /**

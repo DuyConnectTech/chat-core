@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { PersonalAccessToken, Session } from "../models/index.js";
+import { PersonalAccessToken, Session } from "#models/index.js";
 
 class TokenService {
     constructor() {

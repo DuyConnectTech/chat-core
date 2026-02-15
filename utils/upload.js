@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { MULTIMEDIA_CONFIG } from '../config/features.js';
+import { MULTIMEDIA_CONFIG } from '#config/features.js';
 
 /**
  * Bộ lọc file: Kiểm tra MIME type dựa trên config

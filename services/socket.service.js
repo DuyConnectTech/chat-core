@@ -1,9 +1,9 @@
 import { Server } from "socket.io";
-import chatService from "./chat.service.js";
-import userService from "./user.service.js";
-import geminiService from "./gemini.service.js";
-import tokenService from "./token.service.js";
-import featureService from "./feature.service.js";
+import chatService from "#services/chat.service.js";
+import userService from "#services/user.service.js";
+import geminiService from "#services/gemini.service.js";
+import tokenService from "#services/token.service.js";
+import featureService from "#services/feature.service.js";
 
 class SocketService {
     init(server) {

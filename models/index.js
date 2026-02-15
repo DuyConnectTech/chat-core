@@ -1,11 +1,11 @@
-import sequelize from "../config/database.js";
-import User from "./User.js";
-import Conversation from "./Conversation.js";
-import Message from "./Message.js";
-import ConversationMember from "./ConversationMember.js";
-import PersonalAccessToken from "./PersonalAccessToken.js";
-import Session from "./Session.js";
-import Setting from "./Setting.js";
+import sequelize from "#config/database.js";
+import User from "#models/User.js";
+import Conversation from "#models/Conversation.js";
+import Message from "#models/Message.js";
+import ConversationMember from "#models/ConversationMember.js";
+import PersonalAccessToken from "#models/PersonalAccessToken.js";
+import Session from "#models/Session.js";
+import Setting from "#models/Setting.js";
 
 // --- Associations ---
 

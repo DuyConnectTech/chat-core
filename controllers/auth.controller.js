@@ -1,7 +1,7 @@
-import authService from "../services/auth.service.js";
-import asyncHandler from "../utils/async-handler.js";
-import featureService from "../services/feature.service.js";
-import cookieConfig from "../config/cookie.js";
+import authService from "#services/auth.service.js";
+import asyncHandler from "#utils/async-handler.js";
+import featureService from "#services/feature.service.js";
+import cookieConfig from "#config/cookie.js";
 
 class AuthController {
     /**

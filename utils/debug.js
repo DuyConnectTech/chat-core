@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { LOG_DIR } from "./path.js";
+import { LOG_DIR } from "#utils/path.js";
 
 function ensureLogStream() {
     if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });

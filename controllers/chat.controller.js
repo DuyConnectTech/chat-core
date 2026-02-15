@@ -1,15 +1,15 @@
-import chatService from '../services/chat.service.js';
-import { User, Conversation } from '../models/index.js';
+import chatService from '#services/chat.service.js';
+import { User, Conversation } from '#models/index.js';
 import { Op } from 'sequelize';
-import asyncHandler from '../utils/async-handler.js';
-import geminiService from '../services/gemini.service.js';
-import featureService from '../services/feature.service.js';
-import { MULTIMEDIA_CONFIG } from '../config/features.js';
-import { generateThumbnail } from '../utils/thumbnail.js';
+import asyncHandler from '#utils/async-handler.js';
+import geminiService from '#services/gemini.service.js';
+import featureService from '#services/feature.service.js';
+import { MULTIMEDIA_CONFIG } from '#config/features.js';
+import { generateThumbnail } from '#utils/thumbnail.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { ROOT_DIR } from '../utils/path.js';
+import { ROOT_DIR } from '#utils/path.js';
 
 class ChatController {
   /**

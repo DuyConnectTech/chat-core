@@ -1,5 +1,5 @@
-import { Setting } from '../models/index.js';
-import { CORE_FEATURES, OPTIONAL_FEATURES } from '../config/features.js';
+import { Setting } from '#models/index.js';
+import { CORE_FEATURES, OPTIONAL_FEATURES } from '#config/features.js';
 
 /**
  * FeatureService — Quản lý Feature Flags

@@ -1,4 +1,4 @@
-import featureService from '../services/feature.service.js';
+import featureService from '#services/feature.service.js';
 
 /**
  * Middleware factory: Chặn request khi feature bị tắt

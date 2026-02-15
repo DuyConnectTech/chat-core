@@ -4,7 +4,6 @@
  */
 
 import geoip from "geoip-lite";
-import config from "../config/app.js";
 
 /**
  * Phân giải và "làm sạch" một chuỗi IP thô.
@@ -59,7 +58,7 @@ const describeLocation = (ip) => {
  */
 const logOrigin = (source, rawIp) => {
     // Chỉ chạy khi ở chế độ debug
-    if (config.appDebug !== true) {
+    if (process.env.NODE_ENV !== "development") {
         return;
     }
 

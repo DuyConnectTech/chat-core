@@ -1,8 +1,8 @@
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
-import { ROOT_DIR } from './path.js';
-import { MULTIMEDIA_CONFIG } from '../config/features.js';
+import { ROOT_DIR } from '#utils/path.js';
+import { MULTIMEDIA_CONFIG } from '#config/features.js';
 
 const { thumbnail, uploadDir } = MULTIMEDIA_CONFIG;
 

@@ -1,5 +1,5 @@
-import tokenService from "../services/token.service.js";
-import { User } from "../models/index.js";
+import tokenService from "#services/token.service.js";
+import { User } from "#models/index.js";
 
 /**
  * Middleware xác thực người dùng dựa trên JWT
