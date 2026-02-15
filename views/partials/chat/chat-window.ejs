@@ -21,13 +21,13 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                     <% if (featureFlags.feature_group_chat) { %>
-                    <li><button class="dropdown-item text-danger py-2 d-none" id="leave-group-btn"><i class="fas fa-sign-out-alt me-2 w-20"></i>Rời
+                    <li><button class="dropdown-item text-danger py-2" id="leave-group-btn"><i class="fas fa-sign-out-alt me-2 w-20"></i>Rời
                             nhóm</button></li>
-                    <li><button class="dropdown-item text-danger py-2 d-none" id="delete-group-btn"><i class="fas fa-trash-alt me-2 w-20"></i>Giải tán
+                    <li><button class="dropdown-item text-danger py-2" id="delete-group-btn"><i class="fas fa-trash-alt me-2 w-20"></i>Giải tán
                             nhóm</button></li>
                     <% } %>
                     <% if (featureFlags.feature_ai_bot) { %>
-                    <li><button class="dropdown-item py-2 d-none" id="bot-toggle-btn"><i class="fas fa-robot me-2 w-20"></i>Cài đặt AI</button></li>
+                    <li><button class="dropdown-item py-2" id="bot-toggle-btn"><i class="fas fa-robot me-2 w-20"></i>Cài đặt AI</button></li>
                     <% } %>
                 </ul>
             </div>
