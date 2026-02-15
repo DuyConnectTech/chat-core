@@ -22,6 +22,17 @@ function debugConfig(app) {
 
         if (isDev) console.error(logEntry);
 
+        // API request → trả JSON
+        const isApiRequest = req.originalUrl.startsWith('/api/') || req.xhr || (req.headers.accept && req.headers.accept.includes('json'));
+        
+        if (isApiRequest) {
+            return res.status(statusCode).json({ 
+                success: false, 
+                error: message 
+            });
+        }
+
+        // Page request → render HTML
         res.status(statusCode).render("pages/error", { 
             title: "Lỗi", 
             message, 

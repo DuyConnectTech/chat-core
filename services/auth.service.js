@@ -10,11 +10,11 @@ class AuthService {
     async register({ username, email, password, display_name }) {
         // Kiểm tra trùng lặp username
         const existingUsername = await User.findOne({ where: { username } });
-        if (existingUsername) throw new Error("Tên đăng nhập đã tồn tại");
+        if (existingUsername) { const e = new Error("Tên đăng nhập đã tồn tại"); e.status = 409; throw e; }
 
         // Kiểm tra trùng lặp email
         const existingEmail = await User.findOne({ where: { email } });
-        if (existingEmail) throw new Error("Email đã tồn tại");
+        if (existingEmail) { const e = new Error("Email đã tồn tại"); e.status = 409; throw e; }
 
         const hashedPassword = await bcrypt.hash(password, 10);
         return await User.create({
@@ -37,10 +37,10 @@ class AuthService {
             },
         });
 
-        if (!user) throw new Error("Thông tin đăng nhập không chính xác");
+        if (!user) { const e = new Error("Thông tin đăng nhập không chính xác"); e.status = 401; throw e; }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) throw new Error("Thông tin đăng nhập không chính xác");
+        if (!isMatch) { const e = new Error("Thông tin đăng nhập không chính xác"); e.status = 401; throw e; }
 
         const accessToken = tokenService.generateAccessToken(user);
         const refreshToken = await tokenService.createRefreshToken(user.id, ipAddress, userAgent);

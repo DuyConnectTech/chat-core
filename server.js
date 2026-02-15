@@ -10,6 +10,7 @@ import { sequelize } from "#models/index.js";
 import socketService from "#services/socket.service.js";
 import featureService from "#services/feature.service.js";
 import { loadRoutes } from "./routes/index.js";
+import { debugConfig } from "#utils/debug.js";
 
 dotenv.config();
 
@@ -32,6 +33,9 @@ app.set("views", VIEWS_DIR);
 
 // --- Routes (Dynamic Loading) ---
 await loadRoutes(app);
+
+// --- Error Handler (PHẢI sau routes!) ---
+debugConfig(app);
 
 // --- Database & Socket ---
 socketService.init(server);

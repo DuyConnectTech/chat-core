@@ -4,6 +4,9 @@
 // ============================================
 // Modal System — Custom replacement
 // ============================================
+
+// .fade — compatibility class (modal.js uses .show to toggle)
+.fade { opacity: 1; }
 .modal {
   position: fixed;
   top: 0;
