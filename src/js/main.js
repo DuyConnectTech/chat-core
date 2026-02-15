@@ -17,11 +17,11 @@ function getCookie(name) {
 // Chỉ khởi tạo Socket nếu user đã đăng nhập
 let socket = null;
 if (currentUserId) {
-    socket = io({ 
-        auth: { 
+    socket = io({
+        auth: {
             userId: currentUserId,
-            token: getCookie('accessToken') 
-        } 
+            token: getCookie('accessToken')
+        }
     });
 }
 
@@ -72,9 +72,9 @@ function appendMessage(msg, prepend = false) {
 
     const isMe = msg.sender_id === currentUserId;
     const isSystem = msg.type === 'system';
-    
+
     const msgTime = formatTime(msg.createdAt || msg.created_at);
-    
+
     let contentHtml = '';
     if (msg.is_recalled) {
         contentHtml = `Tin nhắn đã bị thu hồi`;
@@ -113,7 +113,7 @@ function appendMessage(msg, prepend = false) {
             </div>
         `;
     }
-    
+
     if (prepend) {
         const oldHeight = messagesList.scrollHeight;
         messagesList.insertAdjacentHTML('afterbegin', msgHtml);
@@ -135,7 +135,7 @@ async function loadMessages(conversationId, beforeId = null) {
         const url = `/api/chat/conversations/${conversationId}/messages?limit=20${beforeId ? `&beforeId=${beforeId}` : ''}`;
         const response = await fetch(url);
         const messages = await response.json();
-        
+
         if (messages.length < 20) hasMoreMessages = false;
         else hasMoreMessages = true;
 
@@ -166,18 +166,25 @@ if (conversationList) {
 
         document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
         item.classList.add('active');
-        
+
+        // Clear unread styles
+        const preview = item.querySelector('.text-truncate.small');
+        if (preview) {
+            preview.classList.remove('fw-bold', 'text-dark');
+            preview.classList.add('text-muted');
+        }
+
         activeConversationId = item.dataset.id;
         hasMoreMessages = true;
-        
+
         activeChatTitle.innerText = item.querySelector('h6').innerText;
         activeChatAvatar.innerText = item.querySelector('.user-badge').innerText;
-        
+
         noChatSelected.classList.add('d-none');
         chatWindow.classList.remove('d-none');
         chatWindow.classList.add('d-flex');
 
-        if(socket) socket.emit('room:join', activeConversationId);
+        if (socket) socket.emit('room:join', activeConversationId);
         loadMessages(activeConversationId);
 
         const isGroup = item.dataset.type === 'group';
@@ -188,12 +195,12 @@ if (conversationList) {
 }
 
 function updateDropdownUI(isGroup, isOwner, botActive) {
-    if(leaveGroupBtn) leaveGroupBtn.style.display = isGroup ? 'block' : 'none';
-    if(deleteGroupBtn) deleteGroupBtn.style.display = (isGroup && isOwner) ? 'block' : 'none';
-    if(botToggleBtn) {
+    if (leaveGroupBtn) leaveGroupBtn.style.display = isGroup ? 'block' : 'none';
+    if (deleteGroupBtn) deleteGroupBtn.style.display = (isGroup && isOwner) ? 'block' : 'none';
+    if (botToggleBtn) {
         botToggleBtn.style.display = 'block';
-        botToggleBtn.innerHTML = botActive ? 
-            '<i class="fas fa-robot me-2 text-success"></i>Tắt AI Bot' : 
+        botToggleBtn.innerHTML = botActive ?
+            '<i class="fas fa-robot me-2 text-success"></i>Tắt AI Bot' :
             '<i class="fas fa-robot me-2 text-muted"></i>Bật AI Bot';
         botToggleBtn.dataset.active = botActive;
     }
@@ -211,8 +218,8 @@ if (botToggleBtn) {
         const data = await res.json();
         if (data.success) {
             botToggleBtn.dataset.active = newActive;
-            botToggleBtn.innerHTML = newActive ? 
-                '<i class="fas fa-robot me-2 text-success"></i>Tắt AI Bot' : 
+            botToggleBtn.innerHTML = newActive ?
+                '<i class="fas fa-robot me-2 text-success"></i>Tắt AI Bot' :
                 '<i class="fas fa-robot me-2 text-muted"></i>Bật AI Bot';
             const convItem = document.querySelector(`.conv-item[data-id="${activeConversationId}"]`);
             if (convItem) convItem.dataset.bot = newActive;
@@ -238,7 +245,7 @@ if (deleteGroupBtn) {
 }
 
 // --- Recall / Delete ---
-window.recallMessage = async function(messageId) {
+window.recallMessage = async function (messageId) {
     if (!confirm('Bạn có chắc muốn thu hồi tin nhắn này?')) return;
     const res = await fetch(`/api/chat/messages/${messageId}/recall`, { method: 'DELETE' });
     const data = await res.json();
@@ -246,7 +253,7 @@ window.recallMessage = async function(messageId) {
     else alert(data.error || 'Lỗi thu hồi');
 }
 
-window.deleteMessageForMe = async function(messageId) {
+window.deleteMessageForMe = async function (messageId) {
     if (!confirm('Xóa tin nhắn này phía bạn?')) return;
     await fetch(`/api/chat/messages/${messageId}/me`, { method: 'DELETE' });
     const el = document.querySelector(`[data-msg-id="${messageId}"]`);
@@ -268,8 +275,69 @@ if (chatForm) {
 // --- Socket Listeners ---
 if (socket) {
     socket.on('message:new', (msg) => {
-        if (msg.conversation_id === activeConversationId) appendMessage(msg);
+        console.log('Socket received message:new', msg);
+        if (msg.conversation_id === activeConversationId) {
+            appendMessage(msg);
+            scrollToBottom();
+        }
+        updateConversationList(msg);
     });
+
+    function updateConversationList(msg) {
+        console.log('Updating conversation list for:', msg.conversation_id);
+        const list = document.getElementById('conversation-list');
+        if (!list) return;
+
+        const item = list.querySelector(`.conv-item[data-id="${msg.conversation_id}"]`);
+        if (item) {
+            console.log('Found conv-item:', item);
+
+            // 1. Update Preview
+            const preview = item.querySelector('.text-truncate.small');
+            const senderName = msg.sender ? msg.sender.display_name : 'User';
+            let content = msg.content;
+
+            if (msg.type === 'image') content = '[Hình ảnh]';
+            else if (msg.type === 'audio') content = '[Ghi âm]';
+            else if (msg.type === 'system') content = '[Thông báo]';
+            else if (msg.type === 'ai') content = '[AI Bot] ' + content;
+
+            // Strip HTML for preview
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            content = tempDiv.textContent || tempDiv.innerText || '';
+
+            if (preview) {
+                preview.innerText = `${senderName}: ${content}`;
+                // Bold if unread (not active)
+                if (msg.conversation_id !== activeConversationId) {
+                    preview.classList.remove('text-muted');
+                    preview.classList.add('fw-bold', 'text-dark');
+                }
+            }
+
+            // 2. Update Time and Move to Top
+            // Use querySelector specifically for the time element in the header row
+            const timeEl = item.querySelector('.d-flex h6 + small');
+            // fallback if sibling selector fails
+            const timeElFallback = item.querySelector('.d-flex small');
+            const targetTimeEl = timeEl || timeElFallback;
+
+            if (targetTimeEl) {
+                const dateStr = msg.createdAt || msg.created_at;
+                if (dateStr) {
+                    try {
+                        targetTimeEl.innerText = new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {
+                        console.error('Date format error:', e);
+                    }
+                }
+            }
+
+            // 3. Move to top
+            list.prepend(item);
+        }
+    }
 
     socket.on('message:recalled', ({ messageId }) => {
         const wrapper = document.querySelector(`[data-msg-id="${messageId}"]`);
@@ -295,8 +363,8 @@ if (uploadBtn) {
         try {
             const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
             const data = await res.json();
-            if(socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'image' });
-        } catch(err) { alert('Lỗi upload'); }
+            if (socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'image' });
+        } catch (err) { alert('Lỗi upload'); }
         finally {
             uploadBtn.innerHTML = '<i class="fas fa-image"></i>';
             fileInput.value = '';
@@ -324,7 +392,7 @@ async function startRecording() {
             formData.append('file', audioBlob, 'recording.webm');
             const res = await fetch('/api/chat/upload', { method: 'POST', body: formData });
             const data = await res.json();
-            if(socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'audio' });
+            if (socket) socket.emit('message:send', { conversationId: activeConversationId, content: data.url, type: 'audio' });
         };
         mediaRecorder.start();
         recordBtn.classList.replace('btn-outline-secondary', 'btn-danger');
@@ -332,19 +400,19 @@ async function startRecording() {
         let sec = 0;
         recordInterval = setInterval(() => {
             sec++;
-            recordingTime.innerText = `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
+            recordingTime.innerText = `${Math.floor(sec / 60).toString().padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`;
         }, 1000);
     } catch (err) { alert('Không thể truy cập Microphone'); }
 }
 
 function stopRecording() {
-    if(mediaRecorder) {
+    if (mediaRecorder) {
         mediaRecorder.stop();
         mediaRecorder.stream.getTracks().forEach(t => t.stop());
     }
     clearInterval(recordInterval);
-    if(recordBtn) recordBtn.classList.replace('btn-danger', 'btn-outline-secondary');
-    if(recordingStatus) recordingStatus.classList.add('d-none');
+    if (recordBtn) recordBtn.classList.replace('btn-danger', 'btn-outline-secondary');
+    if (recordingStatus) recordingStatus.classList.add('d-none');
 }
 
 // --- AI Suggest ---
@@ -384,4 +452,10 @@ if (createGroupForm) {
         });
         window.location.reload();
     });
+}
+
+function scrollToBottom() {
+    if (messagesList) {
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
 }

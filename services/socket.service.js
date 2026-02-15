@@ -23,13 +23,22 @@ class SocketService {
             next();
         });
 
-        this.io.on("connection", (socket) => {
+        this.io.on("connection", async (socket) => {
             console.log(`User connected: ${socket.userId} (${socket.id})`);
 
-            // Tham gia phòng chat
+            // Tự động join tất cả các phòng chat của user
+            try {
+                const conversations = await chatService.getConversations(socket.userId);
+                conversations.forEach(c => socket.join(c.id));
+                console.log(`User ${socket.userId} auto-joined ${conversations.length} rooms`);
+            } catch (e) {
+                console.error('Auto-join rooms failed:', e);
+            }
+
+            // Tham gia phòng chat (Client active)
             socket.on("room:join", (conversationId) => {
                 socket.join(conversationId);
-                console.log(`User ${socket.userId} joined room: ${conversationId}`);
+                // console.log(`User ${socket.userId} joined room: ${conversationId}`);
             });
 
             // Rời phòng chat

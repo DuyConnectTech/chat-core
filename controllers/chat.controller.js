@@ -16,47 +16,59 @@ class ChatController {
    * API xử lý upload file với logic phân loại folder và tối ưu hóa
    */
   uploadFile = asyncHandler(async (req, res) => {
-    if (!req.file) {
-      throw new Error('Không có file nào được tải lên');
-    }
+    if (!req.file) throw new Error('Không có file nào được tải lên');
 
     const { mimetype, originalname, buffer } = req.file;
+    const { allowedTypes, uploadDir } = MULTIMEDIA_CONFIG;
+
+    // Detect file type based on Config (image, audio...)
+    let fileType = 'other';
+    for (const [type, mimeList] of Object.entries(allowedTypes)) {
+      if (mimeList.includes(mimetype) || mimetype.startsWith(`${type}/`)) {
+        fileType = type;
+        break;
+      }
+    }
+
+    // Fallback: Check extension if mimetype is generic
+    if (fileType === 'other') {
+      const ext = path.extname(originalname).toLowerCase();
+      if (['.mp3', '.wav', '.ogg', '.webm'].includes(ext)) fileType = 'audio';
+      else if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) fileType = 'image';
+    }
+
     const ext = path.extname(originalname).toLowerCase();
-    const { uploadDir } = MULTIMEDIA_CONFIG;
+    const name = path.basename(originalname, ext);
+    // Sanitize name: remove special chars, replace spaces with dashes
+    const cleanName = name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-');
+    const filename = `${cleanName}-${Date.now()}${ext}`;
 
-    const isImage = mimetype.startsWith('image/');
-    const isAudio = mimetype.startsWith('audio/') || originalname.endsWith('.webm') || originalname.endsWith('.mp3');
-
-    // Tên file mới (UUID)
-    const filename = `${uuidv4()}${ext}`;
-
-    if (isImage) {
-      // Dùng helper: lưu gốc + tạo thumbnail (nếu config bật)
+    // Process based on Type  
+    if (fileType === 'image') {
       const result = await generateThumbnail(buffer, filename);
-
-      res.json({
+      return res.json({
         success: true,
         url: result.thumbnailUrl || result.originalUrl,
         originalUrl: result.originalUrl,
         thumbnailUrl: result.thumbnailUrl,
         mimetype,
-        filename,
-      });
-    } else {
-      // Audio / Others → lưu nguyên bản
-      const folder = isAudio ? uploadDir.audio : 'uploads/others';
-      const uploadPath = path.join(ROOT_DIR, 'public', folder, filename);
-
-      await fs.mkdir(path.dirname(uploadPath), { recursive: true });
-      await fs.writeFile(uploadPath, buffer);
-
-      res.json({
-        success: true,
-        url: `/${folder}/${filename}`,
-        mimetype,
-        filename,
+        filename
       });
     }
+
+    // Audio & Others handling
+    const folder = uploadDir[fileType] || 'uploads/others';
+    const uploadPath = path.join(ROOT_DIR, 'public', folder, filename);
+
+    await fs.mkdir(path.dirname(uploadPath), { recursive: true });
+    await fs.writeFile(uploadPath, buffer);
+
+    res.json({
+      success: true,
+      url: `/${folder}/${filename}`,
+      mimetype,
+      filename
+    });
   });
 
   /**
@@ -66,7 +78,7 @@ class ChatController {
   renderChat = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const conversations = await chatService.getConversations(userId);
-    
+
     const otherUsers = await User.findAll({
       where: { id: { [Op.ne]: userId }, role: { [Op.ne]: 'bot' } },
       limit: 10
