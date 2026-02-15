@@ -10,6 +10,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { ROOT_DIR } from '#utils/path.js';
+import socketService from '#services/socket.service.js';
 
 class ChatController {
   /**
@@ -127,6 +128,10 @@ class ChatController {
     const userId = req.user.id;
     const { targetUserId } = req.body;
     const conversation = await chatService.findOrCreatePrivateChat(userId, targetUserId);
+    
+    // Notify users
+    socketService.notifyNewConversation(conversation, [userId, targetUserId]);
+    
     res.json(conversation);
   });
 
@@ -138,6 +143,11 @@ class ChatController {
     const creatorId = req.user.id;
     const { title, memberIds } = req.body;
     const conversation = await chatService.createGroupChat(title, creatorId, memberIds);
+    
+    // Notify users (creator + members)
+    const allMembers = [creatorId, ...memberIds];
+    socketService.notifyNewConversation(conversation, allMembers);
+    
     res.json(conversation);
   });
 
@@ -217,6 +227,23 @@ class ChatController {
     const userId = req.user.id;
     await chatService.markConversationAsRead(id, userId);
     res.json({ success: true });
+  });
+
+  /**
+   * API Render Sidebar (cho frontend refresh)
+   * @method GET /api/chat/partials/sidebar
+   */
+  renderSidebar = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const conversations = await chatService.getConversations(userId);
+    const features = await featureService.getAllFeatures();
+    const featureFlags = {};
+    features.forEach(f => { featureFlags[f.key] = f.enabled; });
+
+    res.render('partials/chat/sidebar', {
+      conversations,
+      featureFlags
+    });
   });
 }
 

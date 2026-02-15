@@ -11,6 +11,7 @@ router.use(authenticate);
 
 // --- Conversations ---
 router.get('/conversations', chatController.getConversations);
+router.get('/chat/partials/sidebar', chatController.renderSidebar);
 router.post('/conversations/private', featureGuard('feature_private_chat'), chatController.createPrivateChat);
 router.post('/conversations/group', featureGuard('feature_group_chat'), chatController.createGroupChat);
 router.get('/conversations/:id/messages', chatController.getMessages);

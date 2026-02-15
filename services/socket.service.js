@@ -123,6 +123,26 @@ class SocketService {
             console.error("Bot Error:", err);
         }
     }
+
+    /**
+     * Thông báo có cuộc hội thoại mới
+     * @param {Object} conversation - Object conversation
+     * @param {Array} memberIds - Mảng user ID của thành viên
+     */
+    notifyNewConversation(conversation, memberIds) {
+        // Find connected sockets
+        const sockets = this.io.sockets.sockets; // Map<socketId, socket>
+        
+        sockets.forEach(socket => {
+            if (memberIds.includes(socket.userId)) {
+                // Join room
+                socket.join(conversation.id);
+                // Emit event
+                socket.emit('conversation:new', conversation);
+                console.log(`User ${socket.userId} joined new room ${conversation.id}`);
+            }
+        });
+    }
 }
 
 export default new SocketService();

@@ -189,51 +189,81 @@ if (messagesList) {
     });
 }
 
-if (conversationList) {
-    conversationList.addEventListener('click', (e) => {
-        const item = e.target.closest('.conv-item');
-        if (!item) return;
+// Global Delegation for dynamic sidebar
+document.addEventListener('click', (e) => {
+    const item = e.target.closest('.conv-item');
+    if (!item) return;
 
-        document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
-        item.classList.add('active');
+    document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+    item.classList.add('active');
 
-        // Clear unread styles & Badge
-        const preview = item.querySelector('.text-truncate.small');
-        if (preview) {
-            preview.classList.remove('fw-bold', 'text-dark');
-            preview.classList.add('text-muted');
+    // ... (rest of logic is same, using item) ...
+    const preview = item.querySelector('.text-truncate.small');
+    if (preview) {
+        preview.classList.remove('fw-bold', 'text-dark');
+        preview.classList.add('text-muted');
+    }
+    const badge = item.querySelector('.badge');
+    let unreadCount = 0;
+    if (badge) {
+        unreadCount = parseInt(badge.innerText);
+        badge.remove();
+    }
+    
+    // Mark as red via API
+    fetch(`/api/chat/conversations/${item.dataset.id}/read`, { method: 'POST' });
+
+    // Update URL
+    const newUrl = `${window.location.pathname}?id=${item.dataset.id}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+
+    activeConversationId = item.dataset.id;
+    hasMoreMessages = true;
+
+    activeChatTitle.innerText = item.querySelector('h6').innerText;
+    // Check if avatar element exists (it might be text or image) - handled by simple innerText for now
+    const userBadge = item.querySelector('.user-badge');
+    if (userBadge) activeChatAvatar.innerText = userBadge.innerText;
+
+    noChatSelected.classList.add('d-none');
+    chatWindow.classList.remove('d-none');
+    chatWindow.classList.add('d-flex');
+
+    if (socket) socket.emit('room:join', activeConversationId);
+    loadMessages(activeConversationId, null, unreadCount);
+
+    const isGroup = item.dataset.type === 'group';
+    const isOwner = item.dataset.owner === currentUserId;
+    const botActive = item.dataset.bot === 'true';
+    updateDropdownUI(isGroup, isOwner, botActive);
+});
+
+// --- Dynamic Sidebar Refresh ---
+async function refreshSidebar() {
+    try {
+        const res = await fetch('/api/chat/partials/sidebar');
+        if (res.ok) {
+            const html = await res.text();
+            // Replace sidebar content (keep wrapper if needed, but sidebar partial is <aside>...)
+            // View partial is <aside class="chat-sidebar">...</aside>
+            // We want to replace the EXISTING <aside class="chat-sidebar">
+            const currentSidebar = document.querySelector('.chat-sidebar');
+            if (currentSidebar) {
+                currentSidebar.outerHTML = html;
+                // Restore active class if needed?
+                if (activeConversationId) {
+                    const newItem = document.querySelector(`.conv-item[data-id="${activeConversationId}"]`);
+                    if (newItem) newItem.classList.add('active');
+                }
+            }
         }
-        const badge = item.querySelector('.badge');
-        let unreadCount = 0;
-        if (badge) {
-            unreadCount = parseInt(badge.innerText);
-            badge.remove();
-        }
-        
-        // Mark as red via API
-        fetch(`/api/chat/conversations/${item.dataset.id}/read`, { method: 'POST' });
+    } catch (e) { console.error('Sidebar refresh failed', e); }
+}
 
-        // Update URL
-        const newUrl = `${window.location.pathname}?id=${item.dataset.id}`;
-        window.history.pushState({ path: newUrl }, '', newUrl);
-
-        activeConversationId = item.dataset.id;
-        hasMoreMessages = true;
-
-        activeChatTitle.innerText = item.querySelector('h6').innerText;
-        activeChatAvatar.innerText = item.querySelector('.user-badge').innerText;
-
-        noChatSelected.classList.add('d-none');
-        chatWindow.classList.remove('d-none');
-        chatWindow.classList.add('d-flex');
-
-        if (socket) socket.emit('room:join', activeConversationId);
-        loadMessages(activeConversationId, null, unreadCount);
-
-        const isGroup = item.dataset.type === 'group';
-        const isOwner = item.dataset.owner === currentUserId;
-        const botActive = item.dataset.bot === 'true';
-        updateDropdownUI(isGroup, isOwner, botActive);
+if (socket) {
+    socket.on('conversation:new', (conv) => {
+        console.log('New conversation received:', conv);
+        refreshSidebar();
     });
 }
 
@@ -394,6 +424,10 @@ if (socket) {
 
             // 3. Move to top
             list.prepend(item);
+        } else {
+            // Conversation item not found -> New conversation (e.g. from stranger)
+            console.log('Conversation item not found for msg:', msg.conversation_id, '- Refreshing sidebar...');
+            refreshSidebar();
         }
     }
 
