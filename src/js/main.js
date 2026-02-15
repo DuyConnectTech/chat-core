@@ -127,7 +127,7 @@ function appendMessage(msg, prepend = false) {
 /**
  * Load tin nhắn
  */
-async function loadMessages(conversationId, beforeId = null) {
+async function loadMessages(conversationId, beforeId = null, unreadCount = 0) {
     if (isLoadingMore) return;
     isLoadingMore = true;
 
@@ -140,9 +140,39 @@ async function loadMessages(conversationId, beforeId = null) {
         else hasMoreMessages = true;
 
         if (!beforeId) messagesList.innerHTML = '';
-        messages.forEach(msg => appendMessage(msg, Boolean(beforeId)));
-        if (!beforeId) messagesList.scrollTop = messagesList.scrollHeight;
-    } catch (error) { console.error('Lỗi load tin nhắn:', error); } finally {
+        
+        let separatorIndex = -1;
+        if (!beforeId && unreadCount > 0) {
+            separatorIndex = messages.length - unreadCount;
+            if (separatorIndex < 0) separatorIndex = 0;
+        }
+
+        messages.forEach((msg, index) => {
+            if (!beforeId && index === separatorIndex) {
+                 const sep = document.createElement('div');
+                 sep.className = 'unread-separator d-flex align-items-center my-3';
+                 sep.innerHTML = `
+                    <hr class="flex-grow-1 border-danger" style="opacity:0.3">
+                    <span class="mx-2 text-danger small fw-bold">Tin nhắn chưa đọc</span>
+                    <hr class="flex-grow-1 border-danger" style="opacity:0.3">
+                 `;
+                 messagesList.appendChild(sep);
+            }
+            appendMessage(msg, Boolean(beforeId));
+        });
+
+        if (!beforeId) {
+            if (unreadCount > 0) {
+                const sep = messagesList.querySelector('.unread-separator');
+                if (sep) sep.scrollIntoView({ behavior: 'auto', block: 'center' });
+                else messagesList.scrollTop = messagesList.scrollHeight;
+            } else {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+        }
+    } catch (error) { 
+        console.error('Lỗi load tin nhắn:', error); 
+    } finally {
         isLoadingMore = false;
     }
 }
@@ -174,10 +204,18 @@ if (conversationList) {
             preview.classList.add('text-muted');
         }
         const badge = item.querySelector('.badge');
-        if (badge) badge.remove();
+        let unreadCount = 0;
+        if (badge) {
+            unreadCount = parseInt(badge.innerText);
+            badge.remove();
+        }
         
         // Mark as red via API
         fetch(`/api/chat/conversations/${item.dataset.id}/read`, { method: 'POST' });
+
+        // Update URL
+        const newUrl = `${window.location.pathname}?id=${item.dataset.id}`;
+        window.history.pushState({ path: newUrl }, '', newUrl);
 
         activeConversationId = item.dataset.id;
         hasMoreMessages = true;
@@ -190,7 +228,7 @@ if (conversationList) {
         chatWindow.classList.add('d-flex');
 
         if (socket) socket.emit('room:join', activeConversationId);
-        loadMessages(activeConversationId);
+        loadMessages(activeConversationId, null, unreadCount);
 
         const isGroup = item.dataset.type === 'group';
         const isOwner = item.dataset.owner === currentUserId;
@@ -284,6 +322,8 @@ if (socket) {
         if (msg.conversation_id === activeConversationId) {
             appendMessage(msg);
             scrollToBottom();
+            // Mark as read immediately if user is viewing this chat
+            fetch(`/api/chat/conversations/${activeConversationId}/read`, { method: 'POST' });
         }
         updateConversationList(msg);
     });
@@ -476,4 +516,12 @@ function scrollToBottom() {
     if (messagesList) {
         messagesList.scrollTop = messagesList.scrollHeight;
     }
+}
+
+// --- Restore Active Chat from URL ---
+const urlParams = new URLSearchParams(window.location.search);
+const initialChatId = urlParams.get('id');
+if (initialChatId) {
+    const item = document.querySelector(`.conv-item[data-id="${initialChatId}"]`);
+    if (item) item.click();
 }
